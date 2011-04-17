@@ -1,0 +1,4 @@
+qudb
+====
+
+qudb is a Quite Useless DB. You really shouldn't use it.
