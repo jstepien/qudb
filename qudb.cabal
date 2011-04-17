@@ -48,13 +48,14 @@ Cabal-version:       >=1.2
 
 Library
   -- Modules exported by the library.
-  -- Exposed-modules:
+  Exposed-modules: Database.QUDB
 
   -- Packages needed in order to build this package.
-  -- Build-depends:
+  Build-depends: base >= 3 && < 5, array
 
   -- Modules not exported by this package.
-  -- Other-modules:
+  Other-modules: Database.QUDB.Scanner,
+                 Database.QUDB.Parser
 
   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
-  -- Build-tools:
+  Build-tools: happy, alex
