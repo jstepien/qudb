@@ -1,3 +1,9 @@
-module Database.QUDB (parse) where
+module Database.QUDB (
+    initDB, createTable,
+    Type(Int, String), Value(IntValue, StringValue),
+    query, Query(Select, Insert)
+    ) where
 
-import Database.QUDB.Parser (parse)
+import Database.QUDB.Structure
+import Database.QUDB.Query
+import Database.QUDB.EntityTypes
