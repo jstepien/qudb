@@ -55,7 +55,10 @@ Library
 
   -- Modules not exported by this package.
   Other-modules: Database.QUDB.Scanner,
-                 Database.QUDB.Parser
+                 Database.QUDB.Parser,
+                 Database.QUDB.Structure,
+                 Database.QUDB.Query,
+                 Database.QUDB.EntityTypes
 
   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
   Build-tools: happy, alex
