@@ -1,4 +1,6 @@
-module Database.QUDB.Query where
+module Database.QUDB.Query (
+    Query(Select, Insert), query
+    ) where
 
 import Database.QUDB.EntityTypes
 import Database.QUDB.Structure
