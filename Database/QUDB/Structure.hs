@@ -1,5 +1,5 @@
 module Database.QUDB.Structure (
-    initDB, createTable, insertRow, getTable, getValues, DB
+    initDB, createTable, insertRow, getValues, DB
     ) where
 
 import Database.QUDB.EntityTypes
@@ -55,16 +55,14 @@ insertRow db name values = modifyTable db name addRow
                         val:buildNewRow restTs restVs
                     buildNewRow _ _ = error "Incorrect types!"
 
--- |Finds a table by name.
-getTable :: DB -> String -> IO (Maybe Table)
-getTable (DB _ tablesRef) name = readIORef tablesRef >>= return . find
-    where find [] = Nothing
-          find (t@(Table thisName _ _):ts)
-            | thisName == name = Just t
-            | otherwise        = find ts
-
--- |Returns all values from a table.
-getValues :: Table -> [[Value]]
-getValues (Table _ _ rows) = buildValuesList rows
+-- |Returns all values from a table with a given name.
+getValues :: DB -> String -> IO [[Value]]
+getValues (DB _ tablesRef) name =
+    fmap (buildValuesList . findTableRows) $ readIORef tablesRef
     where buildValuesList [] = []
           buildValuesList (Row values:rs) = values : buildValuesList rs
+          findTableRows :: [Table] -> [Row]
+          findTableRows [] = error $ "No such table: '" ++ name ++ "'."
+          findTableRows (Table thisName _ rows:ts)
+            | thisName == name = rows
+            | otherwise        = findTableRows ts

@@ -15,8 +15,4 @@ data Query = Select String         -- ^Accepts the name of a table.
 -- Other queries return an empty collection.
 query :: DB -> Query -> IO [[Value]]
 query db (Insert name values) = insertRow db name values >> return []
-query db (Select name) = do
-    maybeTable <- getTable db name
-    case maybeTable of
-        Nothing    -> return []
-        Just table -> return $ getValues table
+query db (Select name) = getValues db name
