@@ -55,14 +55,22 @@ insertRow db name values = modifyTable db name addRow
                         val:buildNewRow restTs restVs
                     buildNewRow _ _ = error "Incorrect types!"
 
+-- |Returns a table with a given name. Returns Nothing if there's no table with
+-- such name.
+findTable :: DB -> String -> IO (Maybe Table)
+findTable (DB _ tablesRef) name = fmap findByName $ readIORef tablesRef
+    where findByName :: [Table] -> Maybe Table
+          findByName [] = Nothing
+          findByName (table@(Table thisName _ _):ts)
+            | thisName == name = Just table
+            | otherwise        = findByName ts
+
 -- |Returns all values from a table with a given name.
 getValues :: DB -> String -> IO [[Value]]
-getValues (DB _ tablesRef) name =
-    fmap (buildValuesList . findTableRows) $ readIORef tablesRef
+getValues db name = do
+    table <- findTable db name
+    case table of
+        Just (Table _ _ rows) -> return $ buildValuesList rows
+        Nothing -> error $ "No such table: '" ++ name ++ "'."
     where buildValuesList [] = []
           buildValuesList (Row values:rs) = values : buildValuesList rs
-          findTableRows :: [Table] -> [Row]
-          findTableRows [] = error $ "No such table: '" ++ name ++ "'."
-          findTableRows (Table thisName _ rows:ts)
-            | thisName == name = rows
-            | otherwise        = findTableRows ts
