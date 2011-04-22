@@ -27,7 +27,11 @@ createTable :: DB
             -> IO ()
 createTable _ _ [] = error "Tables without columns are illegal."
 createTable _ "" _ = error "Table's name is mandatory."
-createTable (DB _ tables) name colTypes = modifyIORef tables addTable
+createTable db@(DB _ tables) name colTypes = do
+    existingTable <- findTable db name
+    case existingTable of
+        Just _  -> error $ "Table: '" ++ name ++ "' already exists."
+        Nothing -> modifyIORef tables addTable
     where addTable oldTables = newTable : oldTables
           newTable = Table name colTypes []
 
