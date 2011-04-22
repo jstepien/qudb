@@ -1,4 +1,6 @@
-module Database.QUDB.Structure where
+module Database.QUDB.Structure (
+    initDB, createTable, insertRow, getTable, getValues, DB
+    ) where
 
 import Database.QUDB.EntityTypes
 import Data.IORef
@@ -39,6 +41,19 @@ modifyTable (DB _ tablesRef) name fun = modifyIORef tablesRef modTable
           modTable (t@(Table thisName _ _):ts)
             | thisName == name = fun t : ts
             | otherwise        = t : modTable ts
+
+-- |Inserts a new row to a given table. It should check all types and constraints.
+insertRow :: DB -> String -> [Value] -> IO ()
+insertRow db name values = modifyTable db name addRow
+    where addRow :: Table -> Table
+          addRow (Table _ types rows) = Table name types (rows ++ [newRow])
+              where newRow = Row $ buildNewRow types values
+                    buildNewRow [] [] = []
+                    buildNewRow (String:restTs) (val@(StringValue _):restVs) =
+                        val:buildNewRow restTs restVs
+                    buildNewRow (Int:restTs) (val@(IntValue _):restVs) =
+                        val:buildNewRow restTs restVs
+                    buildNewRow _ _ = error "Incorrect types!"
 
 -- |Finds a table by name.
 getTable :: DB -> String -> IO (Maybe Table)
