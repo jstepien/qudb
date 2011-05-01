@@ -1,5 +1,11 @@
 {
-module Database.QUDB.Scanner where
+module Database.QUDB.Scanner (
+    scan,
+    Token(
+        Symb, Str, Int, LParen, RParen, Comma, Select, Insert, From, Into,
+        Asterisk, Values
+        )
+    ) where
 }
 
 %wrapper "basic"
@@ -12,11 +18,17 @@ tokens :-
 
   $white+                     ;
   "--".*                      ;
-  \' $quotable* \'            { \s -> Str s }
+  \' $quotable* \'            { \s -> Str $ init $ tail s }
   \-?$digit+                  { \s -> Int (read s) }
   \(                          { \s -> LParen }
   \)                          { \s -> RParen }
   \,                          { \s -> Comma }
+  "select"                    { \s -> Select }
+  "insert"                    { \s -> Insert }
+  "from"                      { \s -> From }
+  "into"                      { \s -> Into }
+  "values"                    { \s -> Values }
+  \*                          { \s -> Asterisk }
   $alpha [$alpha $digit \_]*  { \s -> Symb s }
 
 {
@@ -24,13 +36,18 @@ tokens :-
 
 -- The token type:
 data Token =
-  Quote       |
   Symb String |
   Str String  |
   Int Int     |
   LParen      |
   RParen      |
-  Comma
+  Comma       |
+  Select      |
+  Insert      |
+  From        |
+  Into        |
+  Values      |
+  Asterisk
   deriving (Eq,Show)
 
 scan = alexScanTokens
