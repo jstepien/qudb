@@ -1,7 +1,7 @@
 {
 module Database.QUDB.Parser (parse) where
 import Database.QUDB.Scanner
-import Database.QUDB.EntityTypes (Value(IntValue, StringValue))
+import qualified Database.QUDB.EntityTypes as T
 import qualified Database.QUDB.Query as Q
 }
 
@@ -22,26 +22,41 @@ import qualified Database.QUDB.Query as Q
       from   { From }
       into   { Into }
       values { Values }
+      table  { Table }
+      create { Create }
 %%
 
 Query : SelectQuery { $1 }
       | InsertQuery { $1 }
+      | CreateTableQuery { $1 }
 
 SelectQuery : select Columns from Table { Q.Select $4 }
 
 InsertQuery: insert into Table values '(' Values ')' { Q.Insert $3 $6 }
+
+CreateTableQuery : create table Table '(' ColumnsDefs ')' { Q.CreateTable $3 $5 }
 
 Values : Value OtherValues { $1 : $2 }
 
 OtherValues : ',' Value OtherValues { $2 : $3 }
             | {- empty -} { [] }
 
-Value : str { StringValue $1 }
-      | int { IntValue $1 }
+Value : str { T.StringValue $1 }
+      | int { T.IntValue $1 }
 
 Table : symb { $1 }
 
 Columns : '*' { }
+
+ColumnsDefs : ColumnDef OtherColumnsDefs { $1 : $2 }
+
+OtherColumnsDefs : ',' ColumnDef OtherColumnsDefs { $2 : $3 }
+                 | {- empty -} { [] }
+
+ColumnDef : symb symb { case $2 of
+                          "int"     -> T.Int
+                          "string"  -> T.String
+                          otherwise -> error $ "No such type: " ++ $2 }
 
 {
 parseError :: [Token] -> a

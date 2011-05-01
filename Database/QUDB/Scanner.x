@@ -3,7 +3,7 @@ module Database.QUDB.Scanner (
     scan,
     Token(
         Symb, Str, Int, LParen, RParen, Comma, Select, Insert, From, Into,
-        Asterisk, Values
+        Asterisk, Values, Create, Table
         )
     ) where
 }
@@ -28,6 +28,8 @@ tokens :-
   "from"                      { \s -> From }
   "into"                      { \s -> Into }
   "values"                    { \s -> Values }
+  "create"                    { \s -> Create }
+  "table"                     { \s -> Table }
   \*                          { \s -> Asterisk }
   $alpha [$alpha $digit \_]*  { \s -> Symb s }
 
@@ -47,6 +49,8 @@ data Token =
   From        |
   Into        |
   Values      |
+  Create      |
+  Table       |
   Asterisk
   deriving (Eq,Show)
 
