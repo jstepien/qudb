@@ -1,9 +1,10 @@
 module Database.QUDB.Structure (
-    initDB, createTable, insertRow, getValues, DB
+    initDB, createTable, insertRow, getValues, getAllValues, DB
     ) where
 
 import Database.QUDB.EntityTypes
 import Data.IORef
+import Data.List (elemIndex)
 
 -- |A database has a filename and a IO reference to tables.
 data DB = DB String (IORef [Table])
@@ -73,9 +74,26 @@ findTable (DB _ tablesRef) name = fmap findByName $ readIORef tablesRef
             | thisName == name = Just table
             | otherwise        = findByName ts
 
+-- |Returns all values from given columns of a table with a given name.
+getValues :: DB -> String -> [String] -> IO [[Value]]
+getValues db name selectedCols = do
+    table <- findTable db name
+    case table of
+        Just (Table _ cols rows) -> return $ map (valuesFilter cols) rows
+        Nothing -> error $ "No such table: '" ++ name ++ "'."
+    where valuesFilter :: [Column] -> Row -> [Value]
+          valuesFilter tableCols (Row values) =
+              map (values !!) columnIDs
+              where columnIDs = map columnID selectedCols
+                    columnID c = case elemIndex c (names tableCols) of
+                                     Just int -> int
+                                     Nothing -> error $ "No such column: '" ++ c
+                                         ++ "'."
+                    names = map (\(Column name _) -> name)
+
 -- |Returns all values from a table with a given name.
-getValues :: DB -> String -> IO [[Value]]
-getValues db name = do
+getAllValues :: DB -> String -> IO [[Value]]
+getAllValues db name = do
     table <- findTable db name
     case table of
         Just (Table _ _ rows) -> return $ buildValuesList rows

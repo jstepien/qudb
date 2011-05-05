@@ -30,7 +30,7 @@ Query : SelectQuery { $1 }
       | InsertQuery { $1 }
       | CreateTableQuery { $1 }
 
-SelectQuery : select Columns from Table { Q.Select $4 }
+SelectQuery : select Columns from Table { Q.Select $4 $2 }
 
 InsertQuery: insert into Table values '(' Values ')' { Q.Insert $3 $6 }
 
@@ -46,7 +46,13 @@ Value : str { T.StringValue $1 }
 
 Table : symb { $1 }
 
-Columns : '*' { }
+Columns : '*' { [] }
+        | ColumnName OtherColumnNames { $1 : $2 }
+
+OtherColumnNames: ',' ColumnName OtherColumnNames { $2 : $3 }
+                | {- empty -} { [] }
+
+ColumnName : symb { $1 }
 
 ColumnsDefs : ColumnDef OtherColumnsDefs { $1 : $2 }
 
