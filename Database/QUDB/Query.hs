@@ -9,7 +9,7 @@ import Database.QUDB.Structure
 data Query = Select String         -- ^Accepts the name of a table.
            | Insert String [Value] -- ^Accepts the name of a table and a list
                                    -- of values to insert.
-           | CreateTable String [Type]
+           | CreateTable String [(String, Type)]
            deriving Show
 
 -- |Executes a query. Select queries return a list of rows containing values.
@@ -17,7 +17,7 @@ data Query = Select String         -- ^Accepts the name of a table.
 query :: DB -> Query -> IO [[Value]]
 query db (Insert name values) = noResult $ insertRow db name values
 query db (Select name) = getValues db name
-query db (CreateTable name types) = noResult $ createTable db name types
+query db (CreateTable name colums) = noResult $ createTable db name colums
 
 noResult :: IO a -> IO [[Value]]
 noResult x = x >> return []

@@ -54,8 +54,8 @@ OtherColumnsDefs : ',' ColumnDef OtherColumnsDefs { $2 : $3 }
                  | {- empty -} { [] }
 
 ColumnDef : symb symb { case $2 of
-                          "int"     -> T.Int
-                          "string"  -> T.String
+                          "int"     -> ($1, T.Int)
+                          "string"  -> ($1, T.String)
                           otherwise -> error $ "No such type: " ++ $2 }
 
 {
