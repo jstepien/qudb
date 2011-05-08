@@ -1,15 +1,19 @@
 module Database.QUDB.Structure (
-    initDB, createTable, insertRow, getValues, DB, Table, Row
+    initDB, createTable, insertRow, getValues, getAllValues, DB, Table, Row
     ) where
 
 import Database.QUDB.EntityTypes
 import Data.IORef
+import Data.List (elemIndex)
 
 -- |A database has a filename and a IO reference to tables.
 data DB = DB String (IORef [Table])
 
 -- |A table has a name, a list of columns' types and rows.
-data Table = Table String [Type] [Row]
+data Table = Table String [Column] [Row]
+
+-- |A table's column which has a name and a type.
+data Column = Column String Type
 
 -- |Row consists of a list of values.
 data Row = Row [Value]
@@ -23,17 +27,17 @@ initDB filename = do
 -- |Adds a table to a given database.
 createTable :: DB
             -> String -- The name of the added table
-            -> [Type] -- Types of values stored in the table
+            -> [(String, Type)] -- Names and types of values stored in the table
             -> IO ()
 createTable _ _ [] = error "Tables without columns are illegal."
 createTable _ "" _ = error "Table's name is mandatory."
-createTable db@(DB _ tables) name colTypes = do
+createTable db@(DB _ tables) name cols = do
     existingTable <- findTable db name
     case existingTable of
         Just _  -> error $ "Table: '" ++ name ++ "' already exists."
         Nothing -> modifyIORef tables addTable
     where addTable oldTables = newTable : oldTables
-          newTable = Table name colTypes []
+          newTable = Table name (map (uncurry Column) cols) []
 
 -- |Used to apply a given function to the table with a given name.
 modifyTable :: DB
@@ -50,8 +54,9 @@ modifyTable (DB _ tablesRef) name fun = modifyIORef tablesRef modTable
 insertRow :: DB -> String -> [Value] -> IO ()
 insertRow db name values = modifyTable db name addRow
     where addRow :: Table -> Table
-          addRow (Table _ types rows) = Table name types (rows ++ [newRow])
-              where newRow = Row $ buildNewRow types values
+          addRow (Table _ columns rows) = Table name columns (rows ++ [newRow])
+              where newRow = Row $ buildNewRow (types columns) values
+                    types = map (\(Column _ t) -> t)
                     buildNewRow [] [] = []
                     buildNewRow (String:restTs) (val@(StringValue _):restVs) =
                         val:buildNewRow restTs restVs
@@ -69,9 +74,26 @@ findTable (DB _ tablesRef) name = fmap findByName $ readIORef tablesRef
             | thisName == name = Just table
             | otherwise        = findByName ts
 
+-- |Returns all values from given columns of a table with a given name.
+getValues :: DB -> String -> [String] -> IO [[Value]]
+getValues db name selectedCols = do
+    table <- findTable db name
+    case table of
+        Just (Table _ cols rows) -> return $ map (valuesFilter cols) rows
+        Nothing -> error $ "No such table: '" ++ name ++ "'."
+    where valuesFilter :: [Column] -> Row -> [Value]
+          valuesFilter tableCols (Row values) =
+              map (values !!) columnIDs
+              where columnIDs = map columnID selectedCols
+                    columnID c = case elemIndex c (names tableCols) of
+                                     Just int -> int
+                                     Nothing -> error $ "No such column: '" ++ c
+                                         ++ "'."
+                    names = map (\(Column name _) -> name)
+
 -- |Returns all values from a table with a given name.
-getValues :: DB -> String -> IO [[Value]]
-getValues db name = do
+getAllValues :: DB -> String -> IO [[Value]]
+getAllValues db name = do
     table <- findTable db name
     case table of
         Just (Table _ _ rows) -> return $ buildValuesList rows
