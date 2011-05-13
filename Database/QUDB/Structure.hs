@@ -1,5 +1,5 @@
 module Database.QUDB.Structure (
-    initDB, createTable, insertRow, getValues, getAllValues, DB
+    initDB, createTable, dropTable, insertRow, getValues, getAllValues, DB
     ) where
 
 import Database.QUDB.EntityTypes
@@ -38,6 +38,18 @@ createTable db@(DB _ tables) name cols = do
         Nothing -> modifyIORef tables addTable
     where addTable oldTables = newTable : oldTables
           newTable = Table name (map (uncurry Column) cols) []
+
+-- |Drops a table from a given database.
+dropTable :: DB
+          -> String -- The name of the dropped table
+          -> IO ()
+dropTable _ "" = error "Table's name is mandatory."
+dropTable db@(DB _ tables) name = do
+    existingTable <- findTable db name
+    case existingTable of
+        Just _  -> modifyIORef tables drop
+        Nothing -> error $ "Table: '" ++ name ++ "' doesn't exists."
+    where drop = filter (\(Table thisName _ _) -> name /= thisName)
 
 -- |Used to apply a given function to the table with a given name.
 modifyTable :: DB
