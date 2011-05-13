@@ -56,7 +56,11 @@ modifyTable :: DB
             -> String           -- The name of a table to modify
             -> (Table -> Table) -- The modifying function
             -> IO ()
-modifyTable (DB _ tablesRef) name fun = modifyIORef tablesRef modTable
+modifyTable db@(DB _ tablesRef) name fun = do
+    table <- findTable db name
+    case table of
+        Nothing -> error $ "No such table: '" ++ name ++ "'."
+        Just _  -> modifyIORef tablesRef modTable
     where modTable [] = []
           modTable (t@(Table thisName _ _):ts)
             | thisName == name = fun t : ts
