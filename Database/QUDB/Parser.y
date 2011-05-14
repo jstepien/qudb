@@ -24,17 +24,21 @@ import qualified Database.QUDB.Query as Q
       values { Values }
       table  { Table }
       create { Create }
+      drop   { Drop }
 %%
 
 Query : SelectQuery { $1 }
       | InsertQuery { $1 }
       | CreateTableQuery { $1 }
+      | DropTableQuery { $1 }
 
 SelectQuery : select Columns from Table { Q.Select $4 $2 }
 
 InsertQuery: insert into Table values '(' Values ')' { Q.Insert $3 $6 }
 
 CreateTableQuery : create table Table '(' ColumnsDefs ')' { Q.CreateTable $3 $5 }
+
+DropTableQuery : drop table Table { Q.DropTable $3 }
 
 Values : Value OtherValues { $1 : $2 }
 

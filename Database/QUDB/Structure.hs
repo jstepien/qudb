@@ -76,12 +76,28 @@ createTable db@(DB _ tables) name cols = do
     where addTable oldTables = newTable : oldTables
           newTable = Table name (map (uncurry Column) cols) []
 
+-- |Drops a table from a given database.
+dropTable :: DB
+          -> String -- The name of the dropped table
+          -> IO ()
+dropTable _ "" = error "Table's name is mandatory."
+dropTable db@(DB _ tables) name = do
+    existingTable <- findTable db name
+    case existingTable of
+        Just _  -> modifyIORef tables drop
+        Nothing -> error $ "Table: '" ++ name ++ "' doesn't exists."
+    where drop = filter (\(Table thisName _ _) -> name /= thisName)
+
 -- |Used to apply a given function to the table with a given name.
 modifyTable :: DB
             -> String           -- The name of a table to modify
             -> (Table -> Table) -- The modifying function
             -> IO ()
-modifyTable (DB _ tablesRef) name fun = modifyIORef tablesRef modTable
+modifyTable db@(DB _ tablesRef) name fun = do
+    table <- findTable db name
+    case table of
+        Nothing -> error $ "No such table: '" ++ name ++ "'."
+        Just _  -> modifyIORef tablesRef modTable
     where modTable [] = []
           modTable (t@(Table thisName _ _):ts)
             | thisName == name = fun t : ts

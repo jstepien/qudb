@@ -1,7 +1,6 @@
 module Database.QUDB.Query (
     -- query
 	) where
-
 import Database.QUDB.EntityTypes
 import Database.QUDB.Structure
 
