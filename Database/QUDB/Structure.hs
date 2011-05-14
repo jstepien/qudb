@@ -1,5 +1,5 @@
 module Database.QUDB.Structure (
-    initDB, createTable, insertRow, getValues, getAllValues, DB, Table, Row
+    initDB, createTable, insertRow, getValues, getAllValues, DB, ExecutableQuery, exeq 
     ) where
 
 import Database.QUDB.EntityTypes
