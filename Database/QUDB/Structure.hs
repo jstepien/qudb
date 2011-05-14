@@ -137,3 +137,18 @@ getAllValues db name = do
         Nothing -> error $ "No such table: '" ++ name ++ "'."
     where buildValuesList [] = []
           buildValuesList (Row values:rs) = values : buildValuesList rs
+
+-- |Implementation of Query functionality.
+instance ExecutableQuery Query where
+	-- |Select QOperation now is only a stub returning all cols.
+	exeq _ (Query Select _) qtable = qtable 
+	-- |Top QOperation
+	exeq _ (Query Top (TopArg top)) qtable = retQTable top qtable where
+		retQTable num qtable = QTable
+			(qTable qtable)
+			(take (fromInteger num) $ qRows qtable) 
+			(snd $ splitAt (fromInteger num) $ qRows qtable)
+	-- |From QOpetation provides QTable for futher operations
+	exeq _ (Query From (FromArg tab)) qtable = QTable tab [] []
+	-- |Any except from From QOperation executed with an EmptyQTable returns same value.
+	exeq _ _ EmptyQTable = EmptyQTable
