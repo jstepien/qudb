@@ -36,12 +36,13 @@ data QOperation = Select | Update | Insert | Delete | From | Where | OrderBy | T
 
 -- |Arguments of QOperation, each of them is related only to one operation.
 data QArg = SelectArg [String]            -- column names to return.
+		  | SelectArgAll				  -- == of * in SQL.
           | UpdateArg [(String, Value)]   -- column names and a value assigned to them.
-          | InsertArg [Row]               -- rows to insert.
+          | InsertArg [Value]             -- row values to inster
           | DeleteArg    
-          | FromArg Table               
+          | FromArg  String				  -- name of table to return.
           | WhereArg WhereConditions      -- read above.
-          | OrderByArg [(Integer, Order)] -- column id and applied order.
+          | OrderByArg [(String, Order)] -- column id and applied order.
           | TopArg Integer                -- number of top rows to return.
 
 -- |Query part defined by QOpetation and QArg.
@@ -156,15 +157,36 @@ getAllValues db name = do
 
 -- |Implementation of Query functionality.
 instance ExecutableQuery Query where
+
 	-- |Select QOperation now is only a stub returning all cols.
-	exeq _ (Query Select _) qtable = qtable 
-	-- |Top QOperation
+	exeq _ (Query Select SelectArgAll) qtable = qtable
+
+	-- |Select QOperation changing only qRows !
+	exeq _ (Query Select (SelectArg columnNames)) qtable = newQTable where
+		newQTable = QTable (qTable qtable) selectedRows (notQRows qtable)
+		selectedRows = map select $ qRows qtable 
+		select (Row values) = Row $ map (values !!) columnIds where
+			columnIds = map columnId columnNames 
+			columnId c = case elemIndex c tableColumnNames of
+			                  Just int -> int
+                             -- Nothing -> error $ "No such column: '" ++ c ++ "'."
+			tableColumnNames = names $ columns $ qTable qtable
+			columns (Table _ cols _) = cols
+			names = map (\(Column name _)->name)
+		
+		-- |Top QOperation
 	exeq _ (Query Top (TopArg top)) qtable = retQTable top qtable where
 		retQTable num qtable = QTable
 			(qTable qtable)
 			(take (fromInteger num) $ qRows qtable) 
 			(snd $ splitAt (fromInteger num) $ qRows qtable)
-	-- |From QOpetation provides QTable for futher operations
-	exeq _ (Query From (FromArg tab)) qtable = QTable tab [] []
+
+	-- |From QOpetation provides QTable for futher operations from given name.
+	exeq db (Query From (FromArg tabName)) _ = do
+	 	table <- findTable db tabName
+		case table of
+		 	 (Just table) -> QTable table [] []
+			 Nothing -> error $ "No such table: '" ++ tabName ++ "'."
+
 	-- |Any except from From QOperation executed with an EmptyQTable returns same value.
 	exeq _ _ EmptyQTable = EmptyQTable
