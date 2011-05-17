@@ -60,8 +60,11 @@ query db queries = do
 		initIOQTable :: IO (QTable)
 		initIOQTable = do return (EmptyQTable)
 		extract qTable = do
-			(QTable  _ rows _ ) <- qTable 
-			return (map (\(Row values)->values) rows)
+			qtable <- qTable
+			case qtable of
+				EmptyQTable -> return ( [[]] )
+				(QTable  _ rows _ ) -> return
+					(map (\(Row values)->values) rows)
 
 -- |Creates a new DB instance with a given filename.
 initDB :: String -> IO DB
