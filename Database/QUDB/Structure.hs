@@ -48,6 +48,7 @@ data Query = Select [String]
 -- |First list of Rows represent selected, and second one thouse unselected.
 data QTable = QTable Table [Row] [Row] | EmptyQTable 
 
+-- |query is funcion responsible for executing Query tokens.
 query :: DB -> [Query] -> IO [[Value]]
 query db queries = do
 	execQueries db queries
@@ -166,6 +167,7 @@ getAllValues db name = do
 -- |Method executing Query.
 exeq :: DB -> Query -> IO (QTable) -> IO (QTable)
 
+-- |exeq From is providing execution with correct QTable.
 exeq db (From tableName) _ = do
 	table <- findTable db tableName
 	case table of
@@ -175,6 +177,7 @@ exeq db (From tableName) _ = do
 -- |Select QOperation now is only a stub returning all cols.
 exeq _ (SelectAll) qtable = qtable
 
+-- |Select modifies only qRows of QTable, removing unselected columns.
 exeq db (Select selectedColumns) qtable = do
 	(QTable (table@(Table tName tColumns tRows )) qRows notQRows) <- qtable
 	return (selecteQTable selectedColumns table tColumns qRows notQRows)
