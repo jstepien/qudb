@@ -195,6 +195,12 @@ exeq db (Select selectedColumns) qtable = do
 				colNames = map (\(Column cName _)-> cName) columns 
 				colIds = map (\(Just int)->int) maybeColIds
 
+-- |Insert query.
+exeq db (Insert values) qtable = do
+	(QTable (table@(Table name _ _)) qRows notQRows) <- qtable
+	insertRow db name values
+	return $ QTable table ((Row values):qRows) notQRows
+
 -- |This Query take given number of rows from top of qRows, and replace it.
 -- |notQRows are extended by unselected ones.
 exeq _ (Top top) qtable = do
