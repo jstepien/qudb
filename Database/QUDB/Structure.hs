@@ -48,18 +48,17 @@ data Query = Select [String]
 -- |First list of Rows represent selected, and second one thouse unselected.
 data QTable = QTable Table [Row] [Row] | EmptyQTable 
 
---qTable (QTable table _ _)  = table
---qRow (QTable _ rows _ )    = rows
---notQRows (QTable _ _ rows) = rows 
-
---query :: DB -> [Query] -> IO [[Value]]
---query db queries = do
---	qtable <- foldr exeq EmptyQTable queries
---	case qtable of
---		QTable _ rows _ -> map extract rows
---		EmptyQTable -> error "Error executing query, returned Empty table"
---	where
---		extract (Row values) = values 
+query :: DB -> [Query] -> IO [[Value]]
+query db queries = do
+	execQueries db queries
+	where
+		execQueries db queries = do
+			extract $ foldr (exeq db) initIOQTable queries
+		initIOQTable :: IO (QTable)
+		initIOQTable = do return (EmptyQTable)
+		extract qTable = do
+			(QTable  _ rows _ ) <- qTable 
+			return (map (\(Row values)->values) rows)
 
 -- |Creates a new DB instance with a given filename.
 initDB :: String -> IO DB
