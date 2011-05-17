@@ -22,7 +22,8 @@ data Row = Row [Value]
 -- |Defines order.
 data Order = Descending | Ascending
 
--- |This data type is used in Where QOperation to allow complex logic expressions.
+-- |This data type is used in Where QOperation,
+-- |to allow complex logic expressions.
 data WhereConditions =
           Condition  String (Value->Bool)   -- Define column name,
                                             -- value comparer, taking value
@@ -43,7 +44,8 @@ data Query = Select [String]
 		   | OrderBy [(String, Order)]
 		   | Top Int
 
--- |QTable is representation of db Table with extra data. Is used when processing query.
+-- |QTable is representation of db Table with an extra data.
+-- |Is used when processing query.
 -- |Table is original table.
 -- |First list of Rows represent selected, and second one thouse unselected.
 data QTable = QTable Table [Row] [Row] | EmptyQTable 
@@ -172,7 +174,7 @@ exeq db (From tableName) _ = do
 	table <- findTable db tableName
 	case table of
 		Nothing -> error $ "No such table: "++tableName
-		Just tab -> return (QTable tab [] [])
+		Just (tab@(Table _ _ rows)) -> return (QTable tab rows  [])
 
 -- |Select QOperation now is only a stub returning all cols.
 exeq _ (SelectAll) qtable = qtable
@@ -182,7 +184,6 @@ exeq db (Select selectedColumns) qtable = do
 	(QTable (table@(Table tName tColumns tRows )) qRows notQRows) <- qtable
 	return (selecteQTable selectedColumns table tColumns qRows notQRows)
 	where
-		selecteQTable :: [String] -> Table -> [Column] -> [Row] -> [Row] -> QTable
 		selecteQTable selectedColumns table columns qRows notQRows =
 			QTable table newQRows notQRows where
 				newQRows = map colSelect qRows
@@ -191,3 +192,12 @@ exeq db (Select selectedColumns) qtable = do
 				colNames = map (\(Column cName _)-> cName) columns 
 				colIds = map (\(Just int)->int) maybeColIds
 
+-- |This Query take given number of rows from top of qRows, and replace it.
+-- |notQRows are extended by unselected ones.
+exeq _ (Top top) qtable = do
+	(QTable table qRows notQRows) <- qtable
+	return $ newQTable table qRows notQRows top where
+		newQTable table qrows notqrows top = 
+			QTable table newQRows newNotQRows where
+				newQRows = take top qrows
+				newNotQRows = (snd $ splitAt top newQRows)++notqrows
