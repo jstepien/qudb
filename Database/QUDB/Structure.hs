@@ -1,10 +1,11 @@
 module Database.QUDB.Structure (
-    initDB, createTable, insertRow, getValues, getAllValues, DB, ExecutableQuery, exeq 
+    initDB, createTable, insertRow, getValues, getAllValues, DB, exeq 
     ) where
 
 import Database.QUDB.EntityTypes
 import Data.IORef
 import Data.List (elemIndex)
+import IO
 
 -- |A database has a filename and a IO reference to tables.
 data DB = DB String (IORef [Table])
@@ -23,7 +24,7 @@ data Order = Descending | Ascending
 
 -- |This data type is used in Where QOperation to allow complex logic expressions.
 data WhereConditions =
-          Condition Integer (Value->Bool)   -- Define column id,
+          Condition  String (Value->Bool)   -- Define column name,
                                             -- value comparer, taking value
                                             -- from each row of given column id
                                             -- and returning True or False.
@@ -31,30 +32,34 @@ data WhereConditions =
         | OrConditions [WhereConditions]    -- Or logic sum
         | AndConditions [WhereConditions]   -- And logic sum
 
--- |Available query operations as a part of query send to data base.
-data QOperation = Select | Update | Insert | Delete | From | Where | OrderBy | Top
-
--- |Arguments of QOperation, each of them is related only to one operation.
-data QArg = SelectArg [String]            -- column names to return.
-		  | SelectArgAll				  -- == of * in SQL.
-          | UpdateArg [(String, Value)]   -- column names and a value assigned to them.
-          | InsertArg [Value]             -- row values to inster
-          | DeleteArg    
-          | FromArg  String				  -- name of table to return.
-          | WhereArg WhereConditions      -- read above.
-          | OrderByArg [(String, Order)] -- column id and applied order.
-          | TopArg Integer                -- number of top rows to return.
-
 -- |Query part defined by QOpetation and QArg.
-data Query = Query QOperation QArg
+data Query = Select [String] 
+		   | SelectAll
+		   | Update [(String, Value)]
+		   | Insert [Value]
+		   | Delete
+		   | From String
+		   | Where WhereConditions
+		   | OrderBy [(String, Order)]
+		   | Top Int
 
 -- |QTable is representation of db Table with extra data. Is used when processing query.
--- |qTable is original table,
--- |qRows are selected rows and notQRows is list of other Table rows.
-data QTable = QTable {qTable::Table, qRows, notQRows::[Row]} | EmptyQTable
+-- |Table is original table.
+-- |First list of Rows represent selected, and second one thouse unselected.
+data QTable = QTable Table [Row] [Row] | EmptyQTable 
 
-class ExecutableQuery eq where
-    exeq :: DB -> eq -> QTable -> QTable
+--qTable (QTable table _ _)  = table
+--qRow (QTable _ rows _ )    = rows
+--notQRows (QTable _ _ rows) = rows 
+
+--query :: DB -> [Query] -> IO [[Value]]
+--query db queries = do
+--	qtable <- foldr exeq EmptyQTable queries
+--	case qtable of
+--		QTable _ rows _ -> map extract rows
+--		EmptyQTable -> error "Error executing query, returned Empty table"
+--	where
+--		extract (Row values) = values 
 
 -- |Creates a new DB instance with a given filename.
 initDB :: String -> IO DB
@@ -155,38 +160,32 @@ getAllValues db name = do
     where buildValuesList [] = []
           buildValuesList (Row values:rs) = values : buildValuesList rs
 
--- |Implementation of Query functionality.
-instance ExecutableQuery Query where
+-------------------------------------------------------------------------------
+--                  Definition of Qeuery execution.                          --
+-------------------------------------------------------------------------------
 
-	-- |Select QOperation now is only a stub returning all cols.
-	exeq _ (Query Select SelectArgAll) qtable = qtable
+-- |Method executing Query.
+exeq :: DB -> Query -> IO (QTable) -> IO (QTable)
 
-	-- |Select QOperation changing only qRows !
-	exeq _ (Query Select (SelectArg columnNames)) qtable = newQTable where
-		newQTable = QTable (qTable qtable) selectedRows (notQRows qtable)
-		selectedRows = map select $ qRows qtable 
-		select (Row values) = Row $ map (values !!) columnIds where
-			columnIds = map columnId columnNames 
-			columnId c = case elemIndex c tableColumnNames of
-			                  Just int -> int
-                             -- Nothing -> error $ "No such column: '" ++ c ++ "'."
-			tableColumnNames = names $ columns $ qTable qtable
-			columns (Table _ cols _) = cols
-			names = map (\(Column name _)->name)
-		
-		-- |Top QOperation
-	exeq _ (Query Top (TopArg top)) qtable = retQTable top qtable where
-		retQTable num qtable = QTable
-			(qTable qtable)
-			(take (fromInteger num) $ qRows qtable) 
-			(snd $ splitAt (fromInteger num) $ qRows qtable)
+exeq db (From tableName) _ = do
+	table <- findTable db tableName
+	case table of
+		Nothing -> error $ "No such table: "++tableName
+		Just tab -> return (QTable tab [] [])
 
-	-- |From QOpetation provides QTable for futher operations from given name.
-	exeq db (Query From (FromArg tabName)) _ = do
-	 	table <- findTable db tabName
-		case table of
-		 	 (Just table) -> QTable table [] []
-			 Nothing -> error $ "No such table: '" ++ tabName ++ "'."
+-- |Select QOperation now is only a stub returning all cols.
+exeq _ (SelectAll) qtable = qtable
 
-	-- |Any except from From QOperation executed with an EmptyQTable returns same value.
-	exeq _ _ EmptyQTable = EmptyQTable
+exeq db (Select selectedColumns) qtable = do
+	(QTable (table@(Table tName tColumns tRows )) qRows notQRows) <- qtable
+	return (selecteQTable selectedColumns table tColumns qRows notQRows)
+	where
+		selecteQTable :: [String] -> Table -> [Column] -> [Row] -> [Row] -> QTable
+		selecteQTable selectedColumns table columns qRows notQRows =
+			QTable table newQRows notQRows where
+				newQRows = map colSelect qRows
+				colSelect (Row values) = Row $ map (values !!) colIds
+				maybeColIds = map (`elemIndex` colNames) selectedColumns
+				colNames = map (\(Column cName _)-> cName) columns 
+				colIds = map (\(Just int)->int) maybeColIds
+
