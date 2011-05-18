@@ -28,7 +28,7 @@ import qualified Database.QUDB.Query as Q
       create { Create }
       drop   { Drop }
       where  { Where }
-      set    { Where }
+      set    { Set }
       and    { And }
       '='    { Equals }
       '>'    { Greater }

@@ -30,7 +30,7 @@ tokens :-
   "select"                    { \s -> Select }
   "insert"                    { \s -> Insert }
   "delete"                    { \s -> Delete }
-  "update"                    { \s -> Delete }
+  "update"                    { \s -> Update }
   "from"                      { \s -> From }
   "into"                      { \s -> Into }
   "values"                    { \s -> Values }
@@ -38,7 +38,7 @@ tokens :-
   "table"                     { \s -> Table }
   "drop"                      { \s -> Drop }
   "where"                     { \s -> Where }
-  "set  "                     { \s -> Set }
+  "set"                       { \s -> Set }
   "and"                       { \s -> And }
   \*                          { \s -> Asterisk }
   $alpha [$alpha $digit \_]*  { \s -> Symb s }
