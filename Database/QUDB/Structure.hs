@@ -205,5 +205,6 @@ exeq db (CreateTable name columns) _ = do
     createTable db name columns 
     return EmptyQTable
 
---exeq db (DropTable tableName) qtable = do
-    
+exeq db (DropTable tableName) _ = do
+    dropTable db tableName 
+    return EmptyQTable
