@@ -252,9 +252,12 @@ exeq db (OrderBy orderBy) qtable = do
                     qsort (r:rows) = 
                         (qsort $ filter (cmp (colIndex cName) ord r) rows)
                         ++ [r]
-                        ++ (qsort $ filter (cmp (colIndex cName) ord r) rows)
+                        ++ (qsort $ filter (notcmp (colIndex cName) ord r) rows)
             cmp index ord (Row values) (Row sValues) = case ord of
-                Descending -> (values !! index) >  (sValues !! index)
+                Descending -> (values !! index) <  (sValues !! index)
+                Ascending  -> (values !! index) > (sValues !! index)
+            notcmp index ord (Row values) (Row sValues) = case ord of
+                Descending -> (values !! index) >=  (sValues !! index)
                 Ascending  -> (values !! index) <= (sValues !! index)
             colIndex name = case elemIndex name columnNames of
                 Nothing  -> error $ "No such column: " ++ name
