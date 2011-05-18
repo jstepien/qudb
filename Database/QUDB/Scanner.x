@@ -2,9 +2,9 @@
 module Database.QUDB.Scanner (
     scan,
     Token(
-        Symb, Str, Int, LParen, RParen, Comma, Select, Insert, Delete, From,
-        Into, Asterisk, Values, Create, Table, Drop, Equals, Where, Greater,
-        Lesser
+        Symb, Str, Int, LParen, RParen, Comma, Select, Insert, Delete, Update,
+        From, Into, Asterisk, Values, Create, Table, Drop, Equals, Where,
+        Greater, Lesser, Set
         )
     ) where
 }
@@ -30,6 +30,7 @@ tokens :-
   "select"                    { \s -> Select }
   "insert"                    { \s -> Insert }
   "delete"                    { \s -> Delete }
+  "update"                    { \s -> Delete }
   "from"                      { \s -> From }
   "into"                      { \s -> Into }
   "values"                    { \s -> Values }
@@ -37,6 +38,7 @@ tokens :-
   "table"                     { \s -> Table }
   "drop"                      { \s -> Drop }
   "where"                     { \s -> Where }
+  "set  "                     { \s -> Set }
   \*                          { \s -> Asterisk }
   $alpha [$alpha $digit \_]*  { \s -> Symb s }
 
@@ -54,6 +56,7 @@ data Token =
   Select      |
   Insert      |
   Delete      |
+  Update      |
   From        |
   Into        |
   Values      |
@@ -64,6 +67,7 @@ data Token =
   Equals      |
   Lesser      |
   Greater     |
+  Set         |
   Asterisk
   deriving (Eq,Show)
 

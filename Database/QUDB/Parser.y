@@ -20,6 +20,7 @@ import qualified Database.QUDB.Query as Q
       select { Select }
       insert { Insert }
       delete { Delete }
+      update { Update }
       from   { From }
       into   { Into }
       values { Values }
@@ -27,6 +28,7 @@ import qualified Database.QUDB.Query as Q
       create { Create }
       drop   { Drop }
       where  { Where }
+      set    { Where }
       '='    { Equals }
       '>'    { Greater }
       '<'    { Lesser }
@@ -35,6 +37,7 @@ import qualified Database.QUDB.Query as Q
 Query : SelectQuery { $1 }
       | InsertQuery { $1 }
       | DeleteQuery { $1 }
+      | UpdateQuery { $1 }
       | CreateTableQuery { $1 }
       | DropTableQuery { $1 }
 
@@ -44,6 +47,8 @@ SelectQuery : select '*' from Table Clauses { Q.SelectAll : [Q.From $4] }
 InsertQuery: insert into Table values '(' Values ')' { Q.Insert $6 : [Q.From $3] }
 
 DeleteQuery : delete from Table Clauses { Q.Delete : [Q.From $3] }
+
+UpdateQuery : update Table set UpdatedValues Clauses { Q.Update $4 : Q.From $2 : $5 }
 
 CreateTableQuery : create table Table '(' ColumnsDefs ')' { [Q.CreateTable $3 $5] }
 
@@ -56,6 +61,13 @@ OtherValues : ',' Value OtherValues { $2 : $3 }
 
 Value : str { T.StringValue $1 }
       | int { T.IntValue $1 }
+
+UpdatedValues : UpdatedValue OptUpdatedValues { $1 : $2 }
+
+UpdatedValue : ColumnName '=' Value { ($1, $3) }
+
+OptUpdatedValues : ',' UpdatedValue OptUpdatedValues { $2 : $3 }
+                 | {- empty -}                       { [] }
 
 Table : symb { $1 }
 
