@@ -48,9 +48,9 @@ SelectQuery : select '*' from Table Clauses     { Q.SelectAll : Q.From $4 : $5 }
 
 InsertQuery: insert into Table values '(' Values ')' { Q.Insert $6 : [Q.From $3] }
 
-DeleteQuery : delete from Table WhereClause { Q.Delete : Q.From $3 : [$4] }
+DeleteQuery : delete from Table OptWhereClause { Q.Delete : Q.From $3 : $4 }
 
-UpdateQuery : update Table set UpdatedValues WhereClause { Q.Update $4 : Q.From $2 : [$5] }
+UpdateQuery : update Table set UpdatedValues OptWhereClause { Q.Update $4 : Q.From $2 : $5 }
 
 CreateTableQuery : create table Table '(' ColumnsDefs ')' { [Q.CreateTable $3 $5] }
 
@@ -94,6 +94,9 @@ Clauses : Clause Clauses { $1 : $2 }
         | {- empty -}    { [] }
 
 Clause : WhereClause { $1 }
+
+OptWhereClause : WhereClause { [$1] }
+               | {- empty -} { [] }
 
 WhereClause : where Predicates { Q.Where $2 }
 
