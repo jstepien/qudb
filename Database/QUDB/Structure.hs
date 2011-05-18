@@ -127,8 +127,8 @@ dumpDB :: DB -> IO ()
 dumpDB (DB (Meta name dumpTimeRef) tablesRef) = do
     tables <- readIORef tablesRef
     now <- getCurrentTime
-    C.writeFile name $ compress $ C.pack $ show tables
     modifyIORef dumpTimeRef (\_ -> now)
+    C.writeFile name $ compress $ C.pack $ show tables
 
 -- |Inserts a new row to a given table. It should check all types and constraints.
 insertRow :: DB -> String -> [Value] -> IO ()
