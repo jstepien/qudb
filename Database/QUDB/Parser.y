@@ -31,9 +31,12 @@ import qualified Database.QUDB.Query as Q
       set    { Set }
       and    { And }
       or     { Or }
+      asc    { Asc }
+      desc   { Desc }
       '='    { Equals }
       '>'    { Greater }
       '<'    { Lesser }
+      orderBy { OrderBy }
 %%
 
 Query : SelectQuery { $1 }
@@ -94,6 +97,18 @@ Clauses : Clause Clauses { $1 : $2 }
         | {- empty -}    { [] }
 
 Clause : WhereClause { $1 }
+       | OrderByClause { $1 }
+
+OrderByClause : orderBy OrderSpecs { Q.OrderBy $2 }
+
+OrderSpecs : OrderSpec OptOrderSpecs { $1 : $2 }
+
+OptOrderSpecs : ',' OrderSpec OptOrderSpecs { $2 : $3 }
+              | {- empty -}                 { [] }
+
+OrderSpec : ColumnName asc   { ($1, Q.Ascending) }
+          | ColumnName desc  { ($1, Q.Descending) }
+          | ColumnName       { ($1, Q.Ascending) }
 
 OptWhereClause : WhereClause { [$1] }
                | {- empty -} { [] }
