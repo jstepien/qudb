@@ -240,9 +240,26 @@ exeq db (Update newValues) qtable = do
                 ++ (snd $ splitAt (index+1) values))
                 indexValues
 
-
-
--- [s...](i-1) + new +(i+1) [x...] + new2 + [y..]
+exeq db (OrderBy orderBy) qtable = do
+    (QTable (table@(Table name columns _)) qRows notQRows) <- qtable
+    return (QTable table (sortedQRows qRows orderBy columns) notQRows) 
+    where
+        sortedQRows qRows orderBy columns = sort qRows orderBy where
+            sort qrows [] = qrows
+            sort rows ((cName, ord):orderBy) =
+                sort (qsort rows) orderBy where 
+                    qsort []   = []
+                    qsort (r:rows) = 
+                        (qsort $ filter (cmp (colIndex cName) ord r) rows)
+                        ++ [r]
+                        ++ (qsort $ filter (cmp (colIndex cName) ord r) rows)
+            cmp index ord (Row values) (Row sValues) = case ord of
+                Descending -> (values !! index) >  (sValues !! index)
+                Ascending  -> (values !! index) <= (sValues !! index)
+            colIndex name = case elemIndex name columnNames of
+                Nothing  -> error $ "No such column: " ++ name
+                Just int -> int
+            columnNames = map (\(Column name _)->name) columns
 
 -- |Insert query.
 exeq db (Insert values) qtable = do
