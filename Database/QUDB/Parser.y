@@ -29,6 +29,7 @@ import qualified Database.QUDB.Query as Q
       drop   { Drop }
       where  { Where }
       set    { Where }
+      and    { And }
       '='    { Equals }
       '>'    { Greater }
       '<'    { Lesser }
@@ -93,7 +94,13 @@ Clauses : Clause Clauses { $1 : $2 }
 
 Clause : WhereClause { $1 }
 
-WhereClause : where Predicate { Q.Where $2 }
+WhereClause : where Predicates { Q.Where $2 }
+
+Predicates : Predicate and PredicateConj { Q.AndConditions ($1:$3) }
+           | Predicate { $1 }
+
+PredicateConj : Predicate and PredicateConj { $1 : $3 }
+              | Predicate { [$1] }
 
 Predicate : ColumnName '=' Value { Q.Condition $1 (== $3) }
           | ColumnName '<' Value { Q.Condition $1 (< $3) }
