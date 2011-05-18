@@ -8,6 +8,7 @@ import Data.Time.Clock
 import qualified Data.ByteString.Lazy.Char8 as C (pack, unpack, writeFile,
     readFile)
 import Codec.Compression.Zlib (compress, decompress)
+import Control.Concurrent (forkIO)
 
 -- |A database has some metadata and a IO reference to tables.
 data DB = DB Meta (IORef [Table])
@@ -117,7 +118,9 @@ modifyTable db@(DB meta tablesRef) name fun = do
             dumpTime <- readIORef timeRef
             now <- getCurrentTime
             let diff = diffUTCTime now dumpTime
-            if diff > dumpInterval then dumpDB db else return ()
+            if diff > dumpInterval
+              then (forkIO $ dumpDB db) >> return ()
+              else return ()
 
 -- |Dumps the database on the HDD.
 dumpDB :: DB -> IO ()
