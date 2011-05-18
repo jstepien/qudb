@@ -170,11 +170,27 @@ exeq db (Select selectedColumns) qtable = do
 				colNames = map (\(Column cName _)-> cName) columns 
 				colIds = map (\(Just int)->int) maybeColIds
 
+--exeq db (Update newValues) qtable = do
+--	(QTable (table@(Table name _ _)) qRows notQRows) <- qtable
+ --   modifyTable db name modValues 
+--	where
+
 -- |Insert query.
 exeq db (Insert values) qtable = do
 	(QTable (table@(Table name _ _)) qRows notQRows) <- qtable
 	insertRow db name values
 	return $ QTable table ((Row values):qRows) notQRows
+
+-- |Perform delete operation, seting Table rows to notQRows.
+exeq db Delete qtable = do 
+	--(QTable (table@(Table name _ _)) qRows notQRows) <- qtable
+    --modifyTable db name deleteRows
+	qt <- qtable
+	return qt
+    --where
+	--	deleteRows :: Table -> Table
+    --    deleteRows (Table name columns rows) = 
+	--		(Table name columns notQRows)
 
 -- |This Query take given number of rows from top of qRows, and replace it.
 -- |notQRows are extended by unselected ones.
@@ -185,3 +201,7 @@ exeq _ (Top top) qtable = do
 			QTable table newQRows newNotQRows where
 				newQRows = take top qrows
 				newNotQRows = (snd $ splitAt top newQRows)++notqrows
+
+exeq db (CreateTable name columns) _ = do
+	createTable db name columns 
+	return EmptyQTable	
