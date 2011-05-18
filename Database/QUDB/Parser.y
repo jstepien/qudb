@@ -28,6 +28,8 @@ import qualified Database.QUDB.Query as Q
       drop   { Drop }
       where  { Where }
       '='    { Equals }
+      '>'    { Greater }
+      '<'    { Lesser }
 %%
 
 Query : SelectQuery { $1 }
@@ -80,6 +82,8 @@ Clauses : Clause Clauses { $1 : $2 }
 Clause : where Predicate { Q.Where $2 }
 
 Predicate : ColumnName '=' Value { Q.Condition $1 (== $3) }
+          | ColumnName '<' Value { Q.Condition $1 (< $3) }
+          | ColumnName '>' Value { Q.Condition $1 (> $3) }
 
 {
 parseError :: [Token] -> a
