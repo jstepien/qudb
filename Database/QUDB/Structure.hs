@@ -1,29 +1,39 @@
-module Database.QUDB.Structure (
-    initDB, createTable, insertRow, getValues, getAllValues, DB, query
-    ) where
+module Database.QUDB.Structure (initDB, loadDB, dumpDB, query, DB) where
 
 import Database.QUDB.EntityTypes
 import Database.QUDB.Query
 import Data.IORef
 import Data.List (elemIndex)
+import Data.Time.Clock
+import qualified Data.ByteString.Lazy.Char8 as C (pack, unpack, writeFile,
+    readFile)
+import Codec.Compression.Zlib (compress, decompress)
 
--- |A database has a filename and a IO reference to tables.
-data DB = DB String (IORef [Table])
+-- |A database has some metadata and a IO reference to tables.
+data DB = DB Meta (IORef [Table])
+
+-- |Table's metadata consists of it's filename and a timestamp of the last
+-- dump.
+data Meta = Meta String (IORef UTCTime)
 
 -- |A table has a name, a list of columns' types and rows.
-data Table = Table String [Column] [Row]
+data Table = Table String [Column] [Row] deriving (Read, Show)
 
 -- |A table's column which has a name and a type.
-data Column = Column String Type
+data Column = Column String Type deriving (Read, Show)
 
 -- |Row consists of a list of values.
-data Row = Row [Value]
+data Row = Row [Value] deriving (Read, Show)
 
 -- |QTable is representation of db Table with an extra data.
 -- |Is used when processing query.
 -- |Table is original table.
 -- |First list of Rows represent selected, and second one thouse unselected.
 data QTable = QTable Table [Row] [Row] | EmptyQTable 
+
+-- |The interval between database dumps on HDD.
+dumpInterval :: NominalDiffTime
+dumpInterval = 60
 
 -- |query is funcion responsible for executing Query tokens.
 query :: DB -> [Query] -> IO [[Value]]
@@ -49,7 +59,18 @@ query db queries = do
 initDB :: String -> IO DB
 initDB filename = do
     tables <- newIORef []
-    return $ DB filename tables
+    now <- getCurrentTime
+    timestampIORef <- newIORef now
+    return $ DB (Meta filename timestampIORef) tables
+
+-- |Loads an existing DB from a given file.
+loadDB :: String -> IO DB
+loadDB filename = do
+  bytestring <- C.readFile filename
+  tables <- (newIORef . read . C.unpack . decompress) bytestring
+  now <- getCurrentTime
+  timestampIORef <- newIORef now
+  return $ DB (Meta filename timestampIORef) tables
 
 -- |Adds a table to a given database.
 createTable :: DB
@@ -83,15 +104,28 @@ modifyTable :: DB
             -> String           -- The name of a table to modify
             -> (Table -> Table) -- The modifying function
             -> IO ()
-modifyTable db@(DB _ tablesRef) name fun = do
+modifyTable db@(DB meta tablesRef) name fun = do
     table <- findTable db name
     case table of
         Nothing -> error $ "No such table: '" ++ name ++ "'."
-        Just _  -> modifyIORef tablesRef modTable
+        Just _  -> modifyIORef tablesRef modTable >> dumpIfNecessary meta
     where modTable [] = []
           modTable (t@(Table thisName _ _):ts)
             | thisName == name = fun t : ts
             | otherwise        = t : modTable ts
+          dumpIfNecessary (Meta _ timeRef) = do
+            dumpTime <- readIORef timeRef
+            now <- getCurrentTime
+            let diff = diffUTCTime now dumpTime
+            if diff > dumpInterval then dumpDB db else return ()
+
+-- |Dumps the database on the HDD.
+dumpDB :: DB -> IO ()
+dumpDB (DB (Meta name dumpTimeRef) tablesRef) = do
+    tables <- readIORef tablesRef
+    now <- getCurrentTime
+    C.writeFile name $ compress $ C.pack $ show tables
+    modifyIORef dumpTimeRef (\_ -> now)
 
 -- |Inserts a new row to a given table. It should check all types and constraints.
 insertRow :: DB -> String -> [Value] -> IO ()
