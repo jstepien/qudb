@@ -4,7 +4,7 @@ module Database.QUDB.Scanner (
     Token(
         Symb, Str, Int, LParen, RParen, Comma, Select, Insert, Delete, Update,
         From, Into, Asterisk, Values, Create, Table, Drop, Equals, Where,
-        Greater, Lesser, Set, And, Or
+        Greater, Lesser, Set, And, Or, OrderBy, Asc, Desc
         )
     ) where
 }
@@ -41,6 +41,9 @@ tokens :-
   "set"                       { \s -> Set }
   "and"                       { \s -> And }
   "or"                        { \s -> Or}
+  "asc"                       { \s -> Asc}
+  "desc"                      { \s -> Desc}
+  "order by"                  { \s -> OrderBy}
   \*                          { \s -> Asterisk }
   $alpha [$alpha $digit \_]*  { \s -> Symb s }
 
@@ -72,6 +75,9 @@ data Token =
   Set         |
   And         |
   Or          |
+  OrderBy     |
+  Asc         |
+  Desc        |
   Asterisk
   deriving (Eq,Show)
 
