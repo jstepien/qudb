@@ -9,4 +9,4 @@ data Type = Int | String deriving Show
 -- |Wrapped value of one of types from Type.
 data Value = IntValue Int
            | StringValue String
-           deriving Show
+           deriving (Show, Eq)

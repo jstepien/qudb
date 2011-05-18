@@ -26,6 +26,8 @@ import qualified Database.QUDB.Query as Q
       table  { Table }
       create { Create }
       drop   { Drop }
+      where  { Where }
+      '='    { Equals }
 %%
 
 Query : SelectQuery { $1 }
@@ -34,12 +36,12 @@ Query : SelectQuery { $1 }
       | CreateTableQuery { $1 }
       | DropTableQuery { $1 }
 
-SelectQuery : select '*' from Table { Q.SelectAll : [Q.From $4] }
-            | select Columns from Table { Q.Select $2 : [Q.From $4] }
+SelectQuery : select '*' from Table Clauses { Q.SelectAll : [Q.From $4] }
+            | select Columns from Table Clauses { Q.Select $2 : [Q.From $4] }
 
 InsertQuery: insert into Table values '(' Values ')' { Q.Insert $6 : [Q.From $3] }
 
-DeleteQuery : delete from Table { Q.Delete : [Q.From $3] }
+DeleteQuery : delete from Table Clauses { Q.Delete : [Q.From $3] }
 
 CreateTableQuery : create table Table '(' ColumnsDefs ')' { [Q.CreateTable $3 $5] }
 
@@ -71,6 +73,13 @@ ColumnDef : symb symb { case $2 of
                           "int"     -> ($1, T.Int)
                           "string"  -> ($1, T.String)
                           otherwise -> error $ "No such type: " ++ $2 }
+
+Clauses : Clause Clauses { $1 : $2 }
+        | {- empty -}    { [] }
+
+Clause : where Predicate { Q.Where $2 }
+
+Predicate : ColumnName '=' Value { Q.Condition $1 (== $3) }
 
 {
 parseError :: [Token] -> a
