@@ -201,6 +201,28 @@ exeq _ (Top top) qtable = do
                 newQRows = take top qrows
                 newNotQRows = (snd $ splitAt top newQRows)++notqrows
 
+exeq db (Where whereConditions) qtable = do 
+    (QTable (table@(Table tName tCols tRows)) qRows notQRows) <- qtable
+    return $ newQTable table tCols qRows notQRows 
+    where
+        newQTable table tCols qRows notQRows =
+            (QTable table newQRows notQRows) where
+                newQRows = filter whereFilter qRows
+               -- newNotQRows = filter notWhereFilter notQRows
+                whereFilter (Row values) = whereWalker whereConditions values
+                whereWalker :: WhereConditions -> [Value] -> Bool
+                whereWalker (OrConditions conditions) values = 
+                    foldr1 (||) (map (`whereWalker` values) conditions)
+                whereWalker (AndConditions conditions) values = 
+                    foldr1 (&&) (map (`whereWalker` values) conditions)
+                whereWalker (Condition colName comparer) values = 
+                    comparer $ getCell colName values
+                getCell colName values = values !! getColId colName
+                getColId colName =
+                    case elemIndex colName (map (\(Column name _)->name) tCols) of
+                        Nothing  -> error $ "No such column: " ++ colName 
+                        Just int -> int 
+
 exeq db (CreateTable name columns) _ = do
     createTable db name columns 
     return EmptyQTable
