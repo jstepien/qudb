@@ -28,7 +28,7 @@ data QTable = QTable Table [Row] [Row] | EmptyQTable
 -- |query is funcion responsible for executing Query tokens.
 query :: DB -> [Query] -> IO [[Value]]
 query db queries = do
-    execQueries db queries
+    execQueries db $ order queries
     where
         execQueries db queries = do
             extract $ foldr (exeq db) initIOQTable queries
@@ -40,6 +40,10 @@ query db queries = do
                 EmptyQTable -> return ( [[]] )
                 (QTable  _ rows _ ) -> return
                     (map (\(Row values)->values) rows)
+        -- From queries have to be on the end of the Query list
+        order queries = filter (not . isFrom) queries ++ filter isFrom queries
+                        where isFrom (From _) = True
+                              isFrom _        = False
 
 -- |Creates a new DB instance with a given filename.
 initDB :: String -> IO DB

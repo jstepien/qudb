@@ -43,8 +43,8 @@ Query : SelectQuery { $1 }
       | CreateTableQuery { $1 }
       | DropTableQuery { $1 }
 
-SelectQuery : select '*' from Table Clauses { Q.SelectAll : [Q.From $4] }
-            | select Columns from Table Clauses { Q.Select $2 : [Q.From $4] }
+SelectQuery : select '*' from Table Clauses     { Q.SelectAll : Q.From $4 : $5 }
+            | select Columns from Table Clauses { Q.Select $2 : Q.From $4 : $5 }
 
 InsertQuery: insert into Table values '(' Values ')' { Q.Insert $6 : [Q.From $3] }
 
