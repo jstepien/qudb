@@ -211,10 +211,38 @@ exeq db (Select selectedColumns) qtable = do
                 colNames = map (\(Column cName _)-> cName) columns 
                 colIds = map (\(Just int)->int) maybeColIds
 
---exeq db (Update newValues) qtable = do
---    (QTable (table@(Table name _ _)) qRows notQRows) <- qtable
- --   modifyTable db name modValues 
---    where
+exeq db (Update newValues) qtable = do
+    (QTable (table@(Table name columns _)) qRows notQRows) <- qtable
+    modifyTable db name (modValues columns newValues qRows notQRows)
+    newTable <- findTable db name 
+    case newTable of
+        Nothing -> error $ "No such table: "++ name
+        Just (tab@(Table _ _ rows)) -> return (QTable tab rows notQRows)
+    where
+        modValues :: 
+            [Column] -> [(String, Value)] -> [Row] -> [Row] -> Table -> Table
+        modValues columns newValues qRows notQRows table = newTable table where
+            newTable (Table name cols _) = Table name cols newRows
+            newRows = updatedRows ++ notQRows
+            updatedRows = map rowUpdate qRows
+            indexValues = map extract newValues
+            columnNames = map (\(Column name _)->name) columns
+            extract (string, value) = case (elemIndex string columnNames) of
+                Nothing  -> error $ "No such column: " ++ string
+                Just int -> (int, value)
+            rowUpdate (Row values) = Row $ correct values indexValues
+            correct :: [Value] -> [(Int, Value)] -> [Value]
+            correct values [] = values
+            correct values ((index, value):indexValues) =
+                correct  
+                ((take index values) 
+                ++ [value]
+                ++ (snd $ splitAt (index+1) values))
+                indexValues
+
+
+
+-- [s...](i-1) + new +(i+1) [x...] + new2 + [y..]
 
 -- |Insert query.
 exeq db (Insert values) qtable = do
