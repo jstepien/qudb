@@ -32,7 +32,8 @@ Query : SelectQuery { $1 }
       | CreateTableQuery { $1 }
       | DropTableQuery { $1 }
 
-SelectQuery : select Columns from Table { Q.Select $2 : [Q.From $4] }
+SelectQuery : select '*' from Table { Q.SelectAll : [Q.From $4] }
+            | select Columns from Table { Q.Select $2 : [Q.From $4] }
 
 InsertQuery: insert into Table values '(' Values ')' { Q.Insert $6 : [Q.From $3] }
 
@@ -50,8 +51,7 @@ Value : str { T.StringValue $1 }
 
 Table : symb { $1 }
 
-Columns : '*' { [] }
-        | ColumnName OtherColumnNames { $1 : $2 }
+Columns : ColumnName OtherColumnNames { $1 : $2 }
 
 OtherColumnNames: ',' ColumnName OtherColumnNames { $2 : $3 }
                 | {- empty -} { [] }
