@@ -46,9 +46,9 @@ SelectQuery : select '*' from Table Clauses { Q.SelectAll : [Q.From $4] }
 
 InsertQuery: insert into Table values '(' Values ')' { Q.Insert $6 : [Q.From $3] }
 
-DeleteQuery : delete from Table Clauses { Q.Delete : [Q.From $3] }
+DeleteQuery : delete from Table WhereClause { Q.Delete : Q.From $3 : [$4] }
 
-UpdateQuery : update Table set UpdatedValues Clauses { Q.Update $4 : Q.From $2 : $5 }
+UpdateQuery : update Table set UpdatedValues WhereClause { Q.Update $4 : Q.From $2 : [$5] }
 
 CreateTableQuery : create table Table '(' ColumnsDefs ')' { [Q.CreateTable $3 $5] }
 
@@ -91,7 +91,9 @@ ColumnDef : symb symb { case $2 of
 Clauses : Clause Clauses { $1 : $2 }
         | {- empty -}    { [] }
 
-Clause : where Predicate { Q.Where $2 }
+Clause : WhereClause { $1 }
+
+WhereClause : where Predicate { Q.Where $2 }
 
 Predicate : ColumnName '=' Value { Q.Condition $1 (== $3) }
           | ColumnName '<' Value { Q.Condition $1 (< $3) }
