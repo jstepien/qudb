@@ -2,10 +2,11 @@ module Database.QUDB (
     initDB, query
     ) where
 
-import Database.QUDB.Structure
-import qualified Database.QUDB.Query as Q
-import Database.QUDB.EntityTypes
+import qualified Database.QUDB.Structure as S
+import Database.QUDB.EntityTypes (Value)
 import Database.QUDB.Parser (parse)
 
-query :: DB -> String -> IO [[Value]]
-query db str = Q.query db $ parse str
+query :: S.DB -> String -> IO [[Value]]
+query db str = S.query db $ parse str
+
+initDB = S.initDB

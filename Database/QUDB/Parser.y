@@ -32,13 +32,13 @@ Query : SelectQuery { $1 }
       | CreateTableQuery { $1 }
       | DropTableQuery { $1 }
 
-SelectQuery : select Columns from Table { Q.Select $4 $2 }
+SelectQuery : select Columns from Table { Q.Select $2 : [Q.From $4] }
 
-InsertQuery: insert into Table values '(' Values ')' { Q.Insert $3 $6 }
+InsertQuery: insert into Table values '(' Values ')' { Q.Insert $6 : [Q.From $3] }
 
-CreateTableQuery : create table Table '(' ColumnsDefs ')' { Q.CreateTable $3 $5 }
+CreateTableQuery : create table Table '(' ColumnsDefs ')' { [Q.CreateTable $3 $5] }
 
-DropTableQuery : drop table Table { Q.DropTable $3 }
+DropTableQuery : drop table Table { [Q.DropTable $3] }
 
 Values : Value OtherValues { $1 : $2 }
 

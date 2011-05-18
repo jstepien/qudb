@@ -26,3 +26,5 @@ data Query = Select [String]
            | Where WhereConditions
            | OrderBy [(String, Order)]
            | Top Int
+           | CreateTable String [(String, Type)]
+           | DropTable String
