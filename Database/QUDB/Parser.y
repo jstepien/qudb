@@ -19,6 +19,7 @@ import qualified Database.QUDB.Query as Q
       ','    { Comma }
       select { Select }
       insert { Insert }
+      delete { Delete }
       from   { From }
       into   { Into }
       values { Values }
@@ -29,6 +30,7 @@ import qualified Database.QUDB.Query as Q
 
 Query : SelectQuery { $1 }
       | InsertQuery { $1 }
+      | DeleteQuery { $1 }
       | CreateTableQuery { $1 }
       | DropTableQuery { $1 }
 
@@ -36,6 +38,8 @@ SelectQuery : select '*' from Table { Q.SelectAll : [Q.From $4] }
             | select Columns from Table { Q.Select $2 : [Q.From $4] }
 
 InsertQuery: insert into Table values '(' Values ')' { Q.Insert $6 : [Q.From $3] }
+
+DeleteQuery : delete from Table { Q.Delete : [Q.From $3] }
 
 CreateTableQuery : create table Table '(' ColumnsDefs ')' { [Q.CreateTable $3 $5] }
 

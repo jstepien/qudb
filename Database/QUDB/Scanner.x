@@ -2,8 +2,8 @@
 module Database.QUDB.Scanner (
     scan,
     Token(
-        Symb, Str, Int, LParen, RParen, Comma, Select, Insert, From, Into,
-        Asterisk, Values, Create, Table, Drop
+        Symb, Str, Int, LParen, RParen, Comma, Select, Insert, Delete, From,
+        Into, Asterisk, Values, Create, Table, Drop
         )
     ) where
 }
@@ -25,6 +25,7 @@ tokens :-
   \,                          { \s -> Comma }
   "select"                    { \s -> Select }
   "insert"                    { \s -> Insert }
+  "delete"                    { \s -> Delete }
   "from"                      { \s -> From }
   "into"                      { \s -> Into }
   "values"                    { \s -> Values }
@@ -47,6 +48,7 @@ data Token =
   Comma       |
   Select      |
   Insert      |
+  Delete      |
   From        |
   Into        |
   Values      |
