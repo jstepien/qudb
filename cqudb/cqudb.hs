@@ -30,7 +30,8 @@ repl db = do
       repl db
     else repl db
 
-printResults = mapM_ putStrLn . map columnify
+printResults [[]] = return ()
+printResults xs = mapM_ putStrLn . map columnify $ xs
   where columnify [] = ""
         columnify [x] = showValue x
         columnify (x:xs) = showValue x ++ "|" ++ columnify xs
