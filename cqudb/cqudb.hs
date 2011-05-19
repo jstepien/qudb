@@ -23,9 +23,12 @@ repl db = do
   putStr "> "
   hFlush stdout
   line <- getLine
-  result <- query db line
-  printResults result
-  repl db
+  if 0 < length line
+    then do
+      result <- query db line
+      printResults result
+      repl db
+    else repl db
 
 printResults = mapM_ putStrLn . map columnify
   where columnify [] = ""
