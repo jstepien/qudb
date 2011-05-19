@@ -27,4 +27,9 @@ repl db = do
   printResults result
   repl db
 
-printResults = print
+printResults = mapM_ putStrLn . map columnify
+  where columnify [] = ""
+        columnify [x] = showValue x
+        columnify (x:xs) = showValue x ++ "|" ++ columnify xs
+        showValue (IntValue x) = show x
+        showValue (StringValue x) = x
