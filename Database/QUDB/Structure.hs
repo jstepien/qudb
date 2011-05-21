@@ -216,8 +216,8 @@ exeq db (Update newValues) qtable = do
     modifyTable db name (modValues columns newValues qRows notQRows)
     newTable <- findTable db name 
     case newTable of
-        Nothing -> error $ "No such table: "++ name
-        Just (tab@(Table _ _ rows)) -> return (QTable tab rows notQRows)
+        Nothing  -> error $ "No such table: "++ name
+        Just _   -> return EmptyQTable 
     where
         modValues :: 
             [Column] -> [(String, Value)] -> [Row] -> [Row] -> Table -> Table
@@ -277,14 +277,13 @@ exeq db (OrderBy orderBy) qtable = do
 exeq db (Insert values) qtable = do
     (QTable (table@(Table name _ _)) qRows notQRows) <- qtable
     insertRow db name values
-    return $ QTable table ((Row values):qRows) notQRows
+    return EmptyQTable 
 
 -- |Perform delete operation, seting Table rows to notQRows.
 exeq db Delete qtable = do 
     (QTable (table@(Table name _ _)) qRows notQRows) <- qtable
     modifyTable db name (deleteRows notQRows)
-    qt <- qtable
-    return qt
+    return EmptyQTable
     where
         deleteRows notQRows (Table name columns rows) = 
             (Table name columns notQRows)
