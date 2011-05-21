@@ -195,7 +195,7 @@ exeq db (From tableName) _ = do
         Nothing -> error $ "No such table: "++tableName
         Just (tab@(Table _ _ rows)) -> return (QTable tab rows  [])
 
--- |Select QOperation now is only a stub returning all cols.
+-- |Exeqution of this query return unmodified QTable.
 exeq _ (SelectAll) qtable = qtable
 
 -- |Select modifies only qRows of QTable, removing unselected columns.
@@ -211,6 +211,8 @@ exeq db (Select selectedColumns) qtable = do
                 colNames = map (\(Column cName _)-> cName) columns 
                 colIds = map (\(Just int)->int) maybeColIds
 
+-- |Update modyfie qRows cells in selected collumns with provided value.
+-- |Then qRows and notQRows are concatenate to replace the table rows. 
 exeq db (Update newValues) qtable = do
     (QTable (table@(Table name columns _)) qRows notQRows) <- qtable
     modifyTable db name (modValues columns newValues qRows notQRows)
@@ -249,6 +251,8 @@ exeq db (Update newValues) qtable = do
                 ++ (snd $ splitAt (index + 1) values))
                 
 
+-- |OrderBy is sorting qRows according to provided column and order.
+-- |The list defining order operations is executed from the tail to the head.
 exeq db (OrderBy orderBy) qtable = do
     (QTable (table@(Table name columns _)) qRows notQRows) <- qtable
     return (QTable table (sortedQRows qRows orderBy columns) notQRows)
@@ -279,7 +283,7 @@ exeq db (Insert values) qtable = do
     insertRow db name values
     return EmptyQTable 
 
--- |Perform delete operation, seting Table rows to notQRows.
+-- |Perform delete operation, setting the Table rows to notQRows.
 exeq db Delete qtable = do 
     (QTable (table@(Table name _ _)) qRows notQRows) <- qtable
     modifyTable db name (deleteRows notQRows)
@@ -298,6 +302,8 @@ exeq _ (Top top) qtable = do
                 newQRows = take top qrows
                 newNotQRows = (snd $ splitAt top newQRows)++notqrows
 
+-- |Where query is recursively parsing where clouse for each row in qRows. 
+-- |Each row, returning Fals is removed from qRows. 
 exeq db (Where whereConditions) qtable = do 
     (QTable (table@(Table tName tCols tRows)) qRows notQRows) <- qtable
     return $ uncurry (QTable table) $ newRows table tCols qRows notQRows 
@@ -321,10 +327,12 @@ exeq db (Where whereConditions) qtable = do
                        Nothing  -> error $ "No such column: " ++ colName 
                        Just int -> int 
 
+-- |Create new table.
 exeq db (CreateTable name columns) _ = do
     createTable db name columns 
     return EmptyQTable
 
+-- |Drop the table.
 exeq db (DropTable tableName) _ = do
     dropTable db tableName 
     return EmptyQTable
