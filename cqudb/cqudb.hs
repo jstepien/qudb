@@ -1,7 +1,11 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 import Database.QUDB
 import System.Environment
 import System.Directory
 import System.IO
+import System.IO.Error
+import qualified Control.Exception as E
 
 main = do
   args <- getArgs
@@ -19,16 +23,17 @@ prepareDB file = do
     then loadDB file
     else initDB file
 
-repl db = do
-  putStr "> "
-  hFlush stdout
-  line <- getLine
-  if 0 < length line
-    then do
-      result <- query db line
-      printResults result
-      repl db
-    else repl db
+repl db = loop `E.catch` handleIOExc `E.catch` handleOtherExc
+  where loop = do putStr "> "
+                  hFlush stdout
+                  line <- getLine
+                  if 0 < length line
+                    then query db line >>= printResults >> loop
+                    else loop
+        handleIOExc = \(e :: E.IOException) -> if isEOFError e
+                                                 then putStrLn ""
+                                                 else ioError e
+        handleOtherExc = \(e :: E.SomeException) -> print e >> repl db
 
 printResults [[]] = return ()
 printResults xs = mapM_ putStrLn . map columnify $ xs
