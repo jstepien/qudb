@@ -3,7 +3,7 @@ module Database.QUDB.Structure (initDB, loadDB, dumpDB, query, DB) where
 import Database.QUDB.EntityTypes
 import Database.QUDB.Query
 import Data.IORef
-import Data.List (elemIndex)
+import Data.List (elemIndex, sortBy)
 import Data.Time.Clock
 import qualified Data.ByteString.Lazy.Char8 as C (pack, unpack, writeFile,
     readFile)
@@ -242,27 +242,27 @@ exeq db (Update newValues) qtable = do
 
 exeq db (OrderBy orderBy) qtable = do
     (QTable (table@(Table name columns _)) qRows notQRows) <- qtable
-    return (QTable table (sortedQRows qRows orderBy columns) notQRows) 
+    return (QTable table (sortedQRows qRows orderBy columns) notQRows)
     where
-        sortedQRows qRows orderBy columns = sort qRows orderBy where
-            sort qrows [] = qrows
-            sort rows ((cName, ord):orderBy) =
-                sort (qsort rows) orderBy where 
-                    qsort []   = []
-                    qsort (r:rows) = 
-                        (qsort $ filter (cmp (colIndex cName) ord r) rows)
-                        ++ [r]
-                        ++ (qsort $ filter (notcmp (colIndex cName) ord r) rows)
-            cmp index ord (Row values) (Row sValues) = case ord of
-                Descending -> (values !! index) <  (sValues !! index)
-                Ascending  -> (values !! index) > (sValues !! index)
-            notcmp index ord (Row values) (Row sValues) = case ord of
-                Descending -> (values !! index) >=  (sValues !! index)
-                Ascending  -> (values !! index) <= (sValues !! index)
-            colIndex name = case elemIndex name columnNames of
-                Nothing  -> error $ "No such column: " ++ name
-                Just int -> int
-            columnNames = map (\(Column name _)->name) columns
+        sortedQRows qRows orderBy columns =
+            colSort qRows $ reverse orderBy where
+                colSort qrows [] = qrows
+                colSort rows ((cName, ord):orderBy) =
+                    colSort (sortBy (cmp cName ord) rows) orderBy
+                cmp colName Ascending (Row valuesTwo) (Row valuesOne) =
+                    orderingValue (valuesTwo !! colIndex colName)
+                        (valuesOne !! colIndex colName)
+                cmp colName Descending (Row valuesTwo) (Row valuesOne) =
+                    orderingValue (valuesOne !! colIndex colName)
+                        (valuesTwo !! colIndex colName)
+                orderingValue :: Value -> Value -> Ordering
+                orderingValue valOne valTwo | valOne == valTwo  = EQ
+                                            | valOne >  valTwo  = GT
+                                            | valOne <  valTwo  = LT
+                colIndex name = case elemIndex name columnNames of
+                    Nothing  -> error $ "No such column: " ++ name
+                    Just int -> int
+                columnNames = map (\(Column name _)->name) columns
 
 -- |Insert query.
 exeq db (Insert values) qtable = do
