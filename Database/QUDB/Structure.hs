@@ -233,12 +233,21 @@ exeq db (Update newValues) qtable = do
             rowUpdate (Row values) = Row $ correct values indexValues
             correct :: [Value] -> [(Int, Value)] -> [Value]
             correct values [] = values
-            correct values ((index, value):indexValues) =
-                correct  
+            correct values ((index, value):indexValues) = correct
+                (checkAndCorrectRow values index value (columns !! index))
+                indexValues
+            checkAndCorrectRow :: [Value] -> Int -> Value -> Column -> [Value]
+            checkAndCorrectRow values index 
+                (StringValue str) (Column _ String) =
+                    correctRow values index (StringValue str)
+            checkAndCorrectRow values index (IntValue int) (Column _ Int) =
+                correctRow values index (IntValue int)
+            checkAndCorrectRow _ _ _ _ = error "Incorrect types!"
+            correctRow values index value =
                 ((take index values) 
                 ++ [value]
-                ++ (snd $ splitAt (index+1) values))
-                indexValues
+                ++ (snd $ splitAt (index + 1) values))
+                
 
 exeq db (OrderBy orderBy) qtable = do
     (QTable (table@(Table name columns _)) qRows notQRows) <- qtable
