@@ -1,4 +1,4 @@
-module Database.QUDB.Structure (initDB, loadDB, dumpDB, query, DB) where
+﻿module Database.QUDB.Structure (initDB, loadDB, dumpDB, query, DB) where
 
 import Database.QUDB.EntityTypes
 import Database.QUDB.Query
@@ -13,7 +13,7 @@ import Control.Concurrent (forkIO)
 -- |A database has some metadata and a IO reference to tables.
 data DB = DB Meta (IORef [Table])
 
--- |Table's metadata consists of it's filename and a timestamp of the last
+-- |Table's metadata consists of it's file name and a timestamp of the last
 -- dump.
 data Meta = Meta String (IORef UTCTime)
 
@@ -29,14 +29,14 @@ data Row = Row [Value] deriving (Read, Show)
 -- |QTable is representation of db Table with an extra data.
 -- |Is used when processing query.
 -- |Table is original table.
--- |First list of Rows represent selected, and second one thouse unselected.
+-- |First list of Rows represent selected, and second one those unselected.
 data QTable = QTable Table [Row] [Row] | EmptyQTable 
 
 -- |The interval between database dumps on HDD.
 dumpInterval :: NominalDiffTime
 dumpInterval = 60
 
--- |query is funcion responsible for executing Query tokens.
+-- |query is function responsible for executing Query tokens.
 query :: DB -> [Query] -> IO [[Value]]
 query db queries = do
     execQueries db $ order queries
@@ -56,7 +56,7 @@ query db queries = do
                         where isFrom (From _) = True
                               isFrom _        = False
 
--- |Creates a new DB instance with a given filename.
+-- |Creates a new DB instance with a given file name.
 initDB :: String -> IO DB
 initDB filename = do
     tables <- newIORef []
@@ -188,17 +188,18 @@ getAllValues db name = do
 -- |Method executing Query.
 exeq :: DB -> Query -> IO (QTable) -> IO (QTable)
 
--- |exeq From is providing execution with correct QTable.
+-- |From query is getting a Table with given name from db.
+-- |If a table exists is wrapped with QTable.  
 exeq db (From tableName) _ = do
     table <- findTable db tableName
     case table of
         Nothing -> error $ "No such table: "++tableName
         Just (tab@(Table _ _ rows)) -> return (QTable tab rows  [])
 
--- |Exeqution of this query return unmodified QTable.
+-- |Select all (synonym of *) returns unmodified QTable.
 exeq _ (SelectAll) qtable = qtable
 
--- |Select modifies only qRows of QTable, removing unselected columns.
+-- |Select query modifies qRows list removing from it unselected columns.
 exeq db (Select selectedColumns) qtable = do
     (QTable (table@(Table tName tColumns tRows )) qRows notQRows) <- qtable
     return (selecteQTable selectedColumns table tColumns qRows notQRows)
@@ -211,8 +212,9 @@ exeq db (Select selectedColumns) qtable = do
                 colNames = map (\(Column cName _)-> cName) columns 
                 colIds = map (\(Just int)->int) maybeColIds
 
--- |Update modyfie qRows cells in selected collumns with provided value.
--- |Then qRows and notQRows are concatenate to replace the table rows. 
+-- |Update query set new values in selected columns of the qRows list. 
+-- |After update concatenation of qRows and notQRows is placed as new 
+-- |table rows set.
 exeq db (Update newValues) qtable = do
     (QTable (table@(Table name columns _)) qRows notQRows) <- qtable
     modifyTable db name (modValues columns newValues qRows notQRows)
@@ -251,8 +253,10 @@ exeq db (Update newValues) qtable = do
                 ++ (snd $ splitAt (index + 1) values))
                 
 
--- |OrderBy is sorting qRows according to provided column and order.
--- |The list defining order operations is executed from the tail to the head.
+-- |OrderBy query sorts a qRows list, comparing values from
+-- |provided columns with selected order. The list of columns used to sort
+-- |a qRows list is reversed. Each column and its order is used in comparing
+-- |function used in stable sorting algorithm provided by 'sortBy'.
 exeq db (OrderBy orderBy) qtable = do
     (QTable (table@(Table name columns _)) qRows notQRows) <- qtable
     return (QTable table (sortedQRows qRows orderBy columns) notQRows)
@@ -277,13 +281,13 @@ exeq db (OrderBy orderBy) qtable = do
                     Just int -> int
                 columnNames = map (\(Column name _)->name) columns
 
--- |Insert query.
+-- |Insert query add new row to a existing table.
 exeq db (Insert values) qtable = do
     (QTable (table@(Table name _ _)) qRows notQRows) <- qtable
     insertRow db name values
     return EmptyQTable 
 
--- |Perform delete operation, setting the Table rows to notQRows.
+-- |Delete query sets rows in a provided table to notQRows.
 exeq db Delete qtable = do 
     (QTable (table@(Table name _ _)) qRows notQRows) <- qtable
     modifyTable db name (deleteRows notQRows)
@@ -292,8 +296,8 @@ exeq db Delete qtable = do
         deleteRows notQRows (Table name columns rows) = 
             (Table name columns notQRows)
 
--- |This Query take given number of rows from top of qRows, and replace it.
--- |notQRows are extended by unselected ones.
+-- |This query take given number of rows from top of qRows, and replace it.
+-- |notQRows are extended by unselected rows from a qRows list.
 exeq _ (Top top) qtable = do
     (QTable table qRows notQRows) <- qtable
     return $ newQTable table qRows notQRows top where
@@ -302,8 +306,9 @@ exeq _ (Top top) qtable = do
                 newQRows = take top qrows
                 newNotQRows = (snd $ splitAt top newQRows)++notqrows
 
--- |Where query is recursively parsing where clouse for each row in qRows. 
--- |Each row, returning Fals is removed from qRows. 
+-- |Where query is checking each row from qRows with set,
+-- |with 'where' conditions. Rows not passing conditions are removed
+-- |from qRows and added to notQRows.
 exeq db (Where whereConditions) qtable = do 
     (QTable (table@(Table tName tCols tRows)) qRows notQRows) <- qtable
     return $ uncurry (QTable table) $ newRows table tCols qRows notQRows 
@@ -327,12 +332,12 @@ exeq db (Where whereConditions) qtable = do
                        Nothing  -> error $ "No such column: " ++ colName 
                        Just int -> int 
 
--- |Create new table.
+-- |Create query creates a new table.
 exeq db (CreateTable name columns) _ = do
     createTable db name columns 
     return EmptyQTable
 
--- |Drop the table.
+-- |Drop query remove the table.
 exeq db (DropTable tableName) _ = do
     dropTable db tableName 
     return EmptyQTable
