@@ -1,4 +1,4 @@
-﻿module Database.QUDB.Structure (initDB, loadDB, dumpDB, query, DB) where
+module Database.QUDB.Structure (initDB, loadDB, dumpDB, query, DB) where
 
 import Database.QUDB.EntityTypes
 import Database.QUDB.Query
