@@ -33,6 +33,7 @@ import qualified Database.QUDB.Query as Q
       or     { Or }
       asc    { Asc }
       desc   { Desc }
+      top    { Top }
       '='    { Equals }
       '>'    { Greater }
       '<'    { Lesser }
@@ -46,8 +47,8 @@ Query : SelectQuery { $1 }
       | CreateTableQuery { $1 }
       | DropTableQuery { $1 }
 
-SelectQuery : select '*' from Table Clauses     { Q.SelectAll : Q.From $4 : $5 }
-            | select Columns from Table Clauses { Q.Select $2 : Q.From $4 : $5 }
+SelectQuery : select OptTop '*' from Table Clauses     { $2 ++ Q.SelectAll : Q.From $5 : $6 }
+            | select OptTop Columns from Table Clauses { $2 ++ Q.Select $3 : Q.From $5 : $6 }
 
 InsertQuery: insert into Table values '(' Values ')' { Q.Insert $6 : [Q.From $3] }
 
@@ -77,6 +78,9 @@ OptUpdatedValues : ',' UpdatedValue OptUpdatedValues { $2 : $3 }
 Table : symb { $1 }
 
 Columns : ColumnName OtherColumnNames { $1 : $2 }
+
+OptTop : top int     { [Q.Top $2] }
+       | {- empty -} { [] }
 
 OtherColumnNames: ',' ColumnName OtherColumnNames { $2 : $3 }
                 | {- empty -} { [] }
