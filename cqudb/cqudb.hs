@@ -11,7 +11,11 @@ main = do
   args <- getArgs
   if 1 /= length args
     then usage
-    else (prepareDB . head) args >>= repl
+    else do db <- (prepareDB . head) args
+            terminal <- hIsTerminalDevice stdin -- Not portable: GHC/Hugs only!
+            if terminal
+              then repl db
+              else noninteractive db
 
 usage = do
   name <- getProgName
@@ -42,3 +46,15 @@ printResults xs = mapM_ putStrLn . map columnify $ xs
         columnify (x:xs) = showValue x ++ "|" ++ columnify xs
         showValue (IntValue x) = show x
         showValue (StringValue x) = x
+
+noninteractive db = loop db `E.catch` handleIOExc
+  where loop db = do line <- getLine
+                     if 0 < length line
+                       then let result = query db line in
+                            case result of
+                              Just (db', res) -> printResults res >> loop db'
+                              Nothing -> loop db
+                       else loop db
+        handleIOExc = \(e :: E.IOException) -> if isEOFError e
+                                                 then putStrLn ""
+                                                 else ioError e
