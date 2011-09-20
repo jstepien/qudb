@@ -38,16 +38,16 @@ prepareDB (Just file) = do
       return $ loadDB dump
     else return $ initDB
 
-repl db = loop db `E.catch` handleIOExc `E.catch` handleOtherExc
-  where loop db = do putStr "> "
-                     hFlush stdout
-                     line <- getLine
-                     if 0 < length line
-                       then let result = query db line in
-                            case result of
-                              Just (db', res) -> printResults res >> loop db'
-                              Nothing -> putStrLn "query returned Nothing :(" >> loop db
-                       else loop db
+repl db = loop `E.catch` handleIOExc `E.catch` handleOtherExc
+  where loop = do putStr "> "
+                  hFlush stdout
+                  line <- getLine
+                  if 0 < length line
+                    then let result = query db line in
+                         case result of
+                           Just (db', res) -> printResults res >> repl db'
+                           Nothing -> putStrLn "query returned Nothing :(" >> loop
+                    else loop
         handleIOExc = \(e :: E.IOException) -> if isEOFError e
                                                  then return db
                                                  else ioError e
