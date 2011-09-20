@@ -48,14 +48,14 @@ Cabal-version:       >= 1.8
 Executable cqudb
   Main-is: cqudb.hs
   Hs-Source-Dirs:  cqudb
-  Build-depends: base >= 3 && < 5, qudb, directory
+  Build-depends: base >= 3 && < 5, qudb, directory, bytestring
 
 Library
   -- Modules exported by the library.
   Exposed-modules: Database.QUDB
 
   -- Packages needed in order to build this package.
-  Build-depends: base >= 3 && < 5, array, time, bytestring, zlib
+  Build-depends: base >= 3 && < 5, array, bytestring, zlib
 
   -- Modules not exported by this package.
   Other-modules: Database.QUDB.Scanner,

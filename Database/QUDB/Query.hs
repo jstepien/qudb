@@ -17,14 +17,14 @@ data WhereConditions =
         | AndConditions [WhereConditions]   -- And logic sum
 
 -- |Query part defined by QOpetation and QArg.
-data Query = Select [String]
-           | SelectAll
-           | Update [(String, Value)]
-           | Insert [Value]
-           | Delete
+data Query = Select String [String]
+           | SelectAll String
+           | Update String [(String, Value)]
+           | Insert String [Value]
+           | Delete String
            | From String
            | Where WhereConditions
            | OrderBy [(String, Order)]
-           | Top Int
+           | Limit Int
            | CreateTable String [(String, Type)]
            | DropTable String

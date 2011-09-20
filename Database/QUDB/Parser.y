@@ -33,7 +33,7 @@ import qualified Database.QUDB.Query as Q
       or     { Or }
       asc    { Asc }
       desc   { Desc }
-      top    { Top }
+      limit  { Limit }
       '='    { Equals }
       '>'    { Greater }
       '<'    { Lesser }
@@ -47,14 +47,14 @@ Query : SelectQuery { $1 }
       | CreateTableQuery { $1 }
       | DropTableQuery { $1 }
 
-SelectQuery : select OptTop '*' from Table Clauses     { $2 ++ Q.SelectAll : Q.From $5 : $6 }
-            | select OptTop Columns from Table Clauses { $2 ++ Q.Select $3 : Q.From $5 : $6 }
+SelectQuery : select '*' from Table Clauses     { Q.SelectAll $4 : $5 }
+            | select Columns from Table Clauses { Q.Select $4 $2 : $5 }
 
-InsertQuery: insert into Table values '(' Values ')' { Q.Insert $6 : [Q.From $3] }
+InsertQuery: insert into Table values '(' Values ')' { [Q.Insert $3 $6] }
 
-DeleteQuery : delete from Table OptWhereClause { Q.Delete : Q.From $3 : $4 }
+DeleteQuery : delete from Table OptWhereClause { Q.Delete $3 : $4 }
 
-UpdateQuery : update Table set UpdatedValues OptWhereClause { Q.Update $4 : Q.From $2 : $5 }
+UpdateQuery : update Table set UpdatedValues OptWhereClause { Q.Update $2 $4 : $5 }
 
 CreateTableQuery : create table Table '(' ColumnsDefs ')' { [Q.CreateTable $3 $5] }
 
@@ -79,9 +79,6 @@ Table : symb { $1 }
 
 Columns : ColumnName OtherColumnNames { $1 : $2 }
 
-OptTop : top int     { [Q.Top $2] }
-       | {- empty -} { [] }
-
 OtherColumnNames: ',' ColumnName OtherColumnNames { $2 : $3 }
                 | {- empty -} { [] }
 
@@ -102,6 +99,7 @@ Clauses : Clause Clauses { $1 : $2 }
 
 Clause : WhereClause { $1 }
        | OrderByClause { $1 }
+       | LimitClause { $1 }
 
 OrderByClause : orderBy OrderSpecs { Q.OrderBy $2 }
 
@@ -116,6 +114,8 @@ OrderSpec : ColumnName asc   { ($1, Q.Ascending) }
 
 OptWhereClause : WhereClause { [$1] }
                | {- empty -} { [] }
+
+LimitClause : limit int { Q.Limit $2 }
 
 WhereClause : where Predicates { Q.Where $2 }
 
