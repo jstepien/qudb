@@ -37,15 +37,18 @@ import qualified Database.QUDB.Query as Q
       '='    { Equals }
       '>'    { Greater }
       '<'    { Lesser }
+      ';'    { Semicolon }
       orderBy { OrderBy }
 %%
 
-Query : SelectQuery { $1 }
-      | InsertQuery { $1 }
-      | DeleteQuery { $1 }
-      | UpdateQuery { $1 }
-      | CreateTableQuery { $1 }
-      | DropTableQuery { $1 }
+Query : QueryWithoutSemicolon ';' { $1 }
+
+QueryWithoutSemicolon : SelectQuery { $1 }
+                      | InsertQuery { $1 }
+                      | DeleteQuery { $1 }
+                      | UpdateQuery { $1 }
+                      | CreateTableQuery { $1 }
+                      | DropTableQuery { $1 }
 
 SelectQuery : select '*' from Table Clauses     { Q.SelectAll $4 : $5 }
             | select Columns from Table Clauses { Q.Select $4 $2 : $5 }

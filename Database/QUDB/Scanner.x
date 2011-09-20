@@ -4,7 +4,7 @@ module Database.QUDB.Scanner (
     Token(
         Symb, Str, Int, LParen, RParen, Comma, Select, Insert, Delete, Update,
         From, Into, Asterisk, Values, Create, Table, Drop, Equals, Where,
-        Greater, Lesser, Set, And, Or, OrderBy, Asc, Desc, Limit
+        Greater, Lesser, Set, And, Or, OrderBy, Asc, Desc, Limit, Semicolon
         )
     ) where
 }
@@ -27,6 +27,7 @@ tokens :-
   \=                          { \s -> Equals }
   \>                          { \s -> Greater }
   \<                          { \s -> Lesser }
+  \;                          { \s -> Semicolon }
   "select"                    { \s -> Select }
   "insert"                    { \s -> Insert }
   "delete"                    { \s -> Delete }
@@ -80,6 +81,7 @@ data Token =
   Asc         |
   Desc        |
   Limit       |
+  Semicolon   |
   Asterisk
   deriving (Eq,Show)
 
