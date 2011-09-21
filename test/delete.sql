@@ -1,0 +1,11 @@
+create table asdf (x string, y int);
+insert into asdf values ('foobar', 0);
+insert into asdf values ('zzz', 5);
+insert into asdf values ('mmm', 123);
+insert into asdf values ('aaa', 741);
+delete from asdf where x > 500;
+select * from asdf;
+delete from asdf where x = 'zzz';
+select * from asdf;
+delete from asdf;
+select * from asdf;

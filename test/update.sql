@@ -1,0 +1,11 @@
+create table asdf (x string, y int);
+insert into asdf values ('foobar', 0);
+insert into asdf values ('zzz', 5);
+insert into asdf values ('mmm', 123);
+insert into asdf values ('aaa', 741);
+update asdf set y = 501 where y > 500;
+select * from asdf order by x, y;
+update asdf set y = 431, x = 'asdfasdf' where x = 'zzz';
+select * from asdf order by x, y;
+update asdf set x = 'qwerty';
+select * from asdf order by x, y;

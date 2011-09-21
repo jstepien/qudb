@@ -1,0 +1,12 @@
+create table asdf (x string, y int);
+insert into asdf values ('zzz', 5);
+select * from asdf;
+insert into asdf values ('mmm', 123);
+insert into asdf values ('aaa', 741);
+select * from asdf;
+insert into asdf values ('ggg', 541);
+select * from asdf where y > 200;
+select * from asdf order by y desc;
+select * from asdf order by x;
+select * from asdf order by x limit 2;
+select * from asdf order by y limit 2;
