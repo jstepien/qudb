@@ -4,7 +4,7 @@ module Database.QUDB.EntityTypes (
   ) where
 
 -- |Types of values which can be stored in columns.
-data Type = Int | String deriving (Read, Show)
+data Type = Int | String deriving (Read, Show, Eq)
 
 -- |Wrapped value of one of types from Type.
 data Value = IntValue Int

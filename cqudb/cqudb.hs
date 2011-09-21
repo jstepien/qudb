@@ -5,6 +5,8 @@ import System.Environment
 import System.Directory
 import System.IO
 import System.IO.Error
+import Data.Maybe (isJust)
+import Control.Monad (when)
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as C (hGetContents, writeFile)
 
@@ -19,9 +21,8 @@ main = do
       db' <- if terminal
                then repl db
                else noninteractive db
-      case filename of
-        (Just name) -> C.writeFile name $ dumpDB db'
-        _ -> return ()
+      when (isJust filename && db /= db') $
+        let (Just name) = filename in C.writeFile name $ dumpDB db'
 
 usage = do
   name <- getProgName

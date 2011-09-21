@@ -8,19 +8,19 @@ import qualified Data.ByteString.Char8 as C (ByteString, pack, unpack, writeFile
 import Codec.Compression.Snappy (compress, decompress)
 
 -- |A database has some metadata and tables.
-data DB = DB Meta [Table] deriving (Show)
+data DB = DB Meta [Table] deriving (Show, Eq)
 
 -- |Table's metadata is empty.
-data Meta = Meta deriving (Show)
+data Meta = Meta deriving (Show, Eq)
 
 -- |A table has a name, a list of columns' types and rows.
-data Table = Table String [Column] [Row] deriving (Read, Show)
+data Table = Table String [Column] [Row] deriving (Read, Show, Eq)
 
 -- |A table's column which has a name and a type.
-data Column = Column String Type deriving (Read, Show)
+data Column = Column String Type deriving (Read, Show, Eq)
 
 -- |Row consists of a list of values.
-data Row = Row [Value] deriving (Read, Show)
+data Row = Row [Value] deriving (Read, Show, Eq)
 
 -- |query is function responsible for executing Query tokens.
 query :: DB -> [Query] -> Maybe (DB, [[Value]])
