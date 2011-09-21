@@ -6,7 +6,7 @@ import System.Directory
 import System.IO
 import System.IO.Error
 import qualified Control.Exception as E
-import qualified Data.ByteString.Lazy.Char8 as C (hGetContents, writeFile)
+import qualified Data.ByteString.Char8 as C (hGetContents, writeFile)
 
 main = do
   args <- getArgs
@@ -34,7 +34,7 @@ prepareDB (Just file) = do
     then do
       handle <- openFile file ReadMode
       dump <- C.hGetContents handle
-      dump `seq` hClose handle
+      hClose handle
       return $ loadDB dump
     else return $ initDB
 

@@ -3,9 +3,9 @@ module Database.QUDB.Structure (initDB, loadDB, dumpDB, query, DB) where
 import Database.QUDB.EntityTypes
 import Database.QUDB.Query
 import Data.List (elemIndex, sortBy)
-import qualified Data.ByteString.Lazy.Char8 as C (ByteString, pack, unpack, writeFile,
+import qualified Data.ByteString.Char8 as C (ByteString, pack, unpack, writeFile,
     readFile)
-import Codec.Compression.Zlib (compress, decompress)
+import Codec.Compression.Snappy (compress, decompress)
 
 -- |A database has some metadata and tables.
 data DB = DB Meta [Table] deriving (Show)
