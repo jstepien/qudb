@@ -60,14 +60,14 @@ printResults xs = mapM_ putStrLn . map columnify $ xs
         showValue (IntValue x) = show x
         showValue (StringValue x) = x
 
-noninteractive db = loop db `E.catch` handleIOExc
-  where loop db = do line <- getLine
-                     if 0 < length line
-                       then let result = query db line in
-                            case result of
-                              Just (db', res) -> printResults res >> loop db'
-                              Nothing -> loop db
-                       else loop db
+noninteractive db = loop `E.catch` handleIOExc
+  where loop = do line <- getLine
+                  if 0 < length line
+                    then let result = query db line in
+                         case result of
+                           Just (db', res) -> printResults res >> noninteractive db'
+                           Nothing -> loop
+                    else loop
         handleIOExc = \(e :: E.IOException) -> if isEOFError e
                                                  then return db
                                                  else ioError e
