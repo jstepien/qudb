@@ -6,9 +6,13 @@ import Data.List (elemIndex, sortBy)
 import qualified Data.ByteString.Char8 as C (ByteString, pack, unpack, writeFile,
     readFile)
 import Codec.Compression.Snappy (compress, decompress)
+import Control.DeepSeq
 
 -- |A database has some metadata and tables.
 data DB = DB Meta [Table] deriving (Show, Eq)
+
+instance NFData (DB) where
+  rnf (DB _ tables) = map rnf tables `deepseq` ()
 
 -- |Table's metadata is empty.
 data Meta = Meta deriving (Show, Eq)
@@ -16,11 +20,17 @@ data Meta = Meta deriving (Show, Eq)
 -- |A table has a name, a list of columns' types and rows.
 data Table = Table String [Column] [Row] deriving (Read, Show, Eq)
 
+instance NFData (Table) where
+  rnf (Table _ _ rows) = map rnf rows `deepseq` ()
+
 -- |A table's column which has a name and a type.
 data Column = Column String Type deriving (Read, Show, Eq)
 
 -- |Row consists of a list of values.
 data Row = Row [Value] deriving (Read, Show, Eq)
+
+instance NFData (Row) where
+  rnf (Row values) = map rnf values `deepseq` ()
 
 -- |query is function responsible for executing Query tokens.
 query :: DB -> [Query] -> Maybe (DB, [[Value]])
@@ -45,7 +55,7 @@ query db@(DB _ tables) (Select tableName selectedColumns : stmts) =
         table = head $ filter (\(Table n _ _) -> n == tableName) tables
 
 query db (Insert name values : stmts) =
-  insertRow db name values >>= \db' -> Just (db', [])
+  insertRow db name values >>= \db' -> Just $!! (db', [])
 
 query db@(DB _ tables) (Delete tableName : stmts) = Just (modifiedDB, [])
   where Just modifiedDB = modifyTable db tableName deleteRows
