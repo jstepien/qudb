@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 import Database.QUDB
 import System.Environment
 import System.Directory
@@ -39,20 +37,36 @@ prepareDB (Just file) = do
       return $ loadDB dump
     else return $ initDB
 
-repl db = loop `E.catch` handleIOExc `E.catch` handleOtherExc
-  where loop = do putStr "> "
-                  hFlush stdout
-                  line <- getLine
-                  if 0 < length line
-                    then let result = query db line in
-                         case result of
-                           Just (db', res) -> printResults res >> repl db'
-                           Nothing -> putStrLn "query returned Nothing :(" >> loop
-                    else loop
-        handleIOExc = \(e :: E.IOException) -> if isEOFError e
-                                                 then return db
-                                                 else ioError e
-        handleOtherExc = \(e :: E.SomeException) -> print e >> repl db
+repl db = do
+  putStr "> "
+  hFlush stdout
+  eof <- isEOF
+  if eof
+    then return db
+    else do
+      line <- getLine
+      db' <- if null line
+               then return db
+               else (case query db line of
+                            Just (db', res) -> printResults res >> return db'
+                            Nothing -> return db
+                    ) `E.catch` handler db
+      repl db'
+  where handler :: DB -> E.SomeException -> IO DB
+        handler db e = print e >> return db
+
+noninteractive db = do
+  eof <- isEOF
+  if eof
+    then return db
+    else do
+      line <- getLine
+      db' <- if null line
+               then return db
+               else case query db line of
+                 Just (db', res) -> printResults res >> return db'
+                 Nothing -> return db
+      noninteractive db'
 
 printResults xs = mapM_ putStrLn . map columnify $ xs
   where columnify [] = ""
@@ -60,15 +74,3 @@ printResults xs = mapM_ putStrLn . map columnify $ xs
         columnify (x:xs) = showValue x ++ "|" ++ columnify xs
         showValue (IntValue x) = show x
         showValue (StringValue x) = x
-
-noninteractive db = loop `E.catch` handleIOExc
-  where loop = do line <- getLine
-                  if 0 < length line
-                    then let result = query db line in
-                         case result of
-                           Just (db', res) -> printResults res >> noninteractive db'
-                           Nothing -> loop
-                    else loop
-        handleIOExc = \(e :: E.IOException) -> if isEOFError e
-                                                 then return db
-                                                 else ioError e
