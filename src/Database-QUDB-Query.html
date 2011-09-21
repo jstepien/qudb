@@ -26,15 +26,15 @@
 <a name="line-17"></a>        <span class='hs-keyglyph'>|</span> <span class='hs-conid'>AndConditions</span> <span class='hs-keyglyph'>[</span><span class='hs-conid'>WhereConditions</span><span class='hs-keyglyph'>]</span>   <span class='hs-comment'>-- And logic sum</span>
 <a name="line-18"></a>
 <a name="line-19"></a><a name="Query"></a><span class='hs-comment'>-- |Query part defined by QOpetation and QArg.</span>
-<a name="line-20"></a><a name="Query"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>Query</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Select</span> <span class='hs-keyglyph'>[</span><span class='hs-conid'>String</span><span class='hs-keyglyph'>]</span>
-<a name="line-21"></a>           <span class='hs-keyglyph'>|</span> <span class='hs-conid'>SelectAll</span>
-<a name="line-22"></a>           <span class='hs-keyglyph'>|</span> <span class='hs-conid'>Update</span> <span class='hs-keyglyph'>[</span><span class='hs-layout'>(</span><span class='hs-conid'>String</span><span class='hs-layout'>,</span> <span class='hs-conid'>Value</span><span class='hs-layout'>)</span><span class='hs-keyglyph'>]</span>
-<a name="line-23"></a>           <span class='hs-keyglyph'>|</span> <span class='hs-conid'>Insert</span> <span class='hs-keyglyph'>[</span><span class='hs-conid'>Value</span><span class='hs-keyglyph'>]</span>
-<a name="line-24"></a>           <span class='hs-keyglyph'>|</span> <span class='hs-conid'>Delete</span>
+<a name="line-20"></a><a name="Query"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>Query</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Select</span> <span class='hs-conid'>String</span> <span class='hs-keyglyph'>[</span><span class='hs-conid'>String</span><span class='hs-keyglyph'>]</span>
+<a name="line-21"></a>           <span class='hs-keyglyph'>|</span> <span class='hs-conid'>SelectAll</span> <span class='hs-conid'>String</span>
+<a name="line-22"></a>           <span class='hs-keyglyph'>|</span> <span class='hs-conid'>Update</span> <span class='hs-conid'>String</span> <span class='hs-keyglyph'>[</span><span class='hs-layout'>(</span><span class='hs-conid'>String</span><span class='hs-layout'>,</span> <span class='hs-conid'>Value</span><span class='hs-layout'>)</span><span class='hs-keyglyph'>]</span>
+<a name="line-23"></a>           <span class='hs-keyglyph'>|</span> <span class='hs-conid'>Insert</span> <span class='hs-conid'>String</span> <span class='hs-keyglyph'>[</span><span class='hs-conid'>Value</span><span class='hs-keyglyph'>]</span>
+<a name="line-24"></a>           <span class='hs-keyglyph'>|</span> <span class='hs-conid'>Delete</span> <span class='hs-conid'>String</span>
 <a name="line-25"></a>           <span class='hs-keyglyph'>|</span> <span class='hs-conid'>From</span> <span class='hs-conid'>String</span>
 <a name="line-26"></a>           <span class='hs-keyglyph'>|</span> <span class='hs-conid'>Where</span> <span class='hs-conid'>WhereConditions</span>
 <a name="line-27"></a>           <span class='hs-keyglyph'>|</span> <span class='hs-conid'>OrderBy</span> <span class='hs-keyglyph'>[</span><span class='hs-layout'>(</span><span class='hs-conid'>String</span><span class='hs-layout'>,</span> <span class='hs-conid'>Order</span><span class='hs-layout'>)</span><span class='hs-keyglyph'>]</span>
-<a name="line-28"></a>           <span class='hs-keyglyph'>|</span> <span class='hs-conid'>Top</span> <span class='hs-conid'>Int</span>
+<a name="line-28"></a>           <span class='hs-keyglyph'>|</span> <span class='hs-conid'>Limit</span> <span class='hs-conid'>Int</span>
 <a name="line-29"></a>           <span class='hs-keyglyph'>|</span> <span class='hs-conid'>CreateTable</span> <span class='hs-conid'>String</span> <span class='hs-keyglyph'>[</span><span class='hs-layout'>(</span><span class='hs-conid'>String</span><span class='hs-layout'>,</span> <span class='hs-conid'>Type</span><span class='hs-layout'>)</span><span class='hs-keyglyph'>]</span>
 <a name="line-30"></a>           <span class='hs-keyglyph'>|</span> <span class='hs-conid'>DropTable</span> <span class='hs-conid'>String</span>
 </pre></body>
