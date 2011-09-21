@@ -13,7 +13,7 @@
 <a name="line-4"></a>  <span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
 <a name="line-5"></a>
 <a name="line-6"></a><a name="Type"></a><span class='hs-comment'>-- |Types of values which can be stored in columns.</span>
-<a name="line-7"></a><a name="Type"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>Type</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Int</span> <span class='hs-keyglyph'>|</span> <span class='hs-conid'>String</span> <span class='hs-keyword'>deriving</span> <span class='hs-layout'>(</span><span class='hs-conid'>Read</span><span class='hs-layout'>,</span> <span class='hs-conid'>Show</span><span class='hs-layout'>)</span>
+<a name="line-7"></a><a name="Type"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>Type</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>Int</span> <span class='hs-keyglyph'>|</span> <span class='hs-conid'>String</span> <span class='hs-keyword'>deriving</span> <span class='hs-layout'>(</span><span class='hs-conid'>Read</span><span class='hs-layout'>,</span> <span class='hs-conid'>Show</span><span class='hs-layout'>,</span> <span class='hs-conid'>Eq</span><span class='hs-layout'>)</span>
 <a name="line-8"></a>
 <a name="line-9"></a><a name="Value"></a><span class='hs-comment'>-- |Wrapped value of one of types from Type.</span>
 <a name="line-10"></a><a name="Value"></a><span class='hs-keyword'>data</span> <span class='hs-conid'>Value</span> <span class='hs-keyglyph'>=</span> <span class='hs-conid'>IntValue</span> <span class='hs-conid'>Int</span>
