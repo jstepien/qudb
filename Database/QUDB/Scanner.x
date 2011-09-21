@@ -12,7 +12,8 @@ module Database.QUDB.Scanner (
 %wrapper "basic"
 
 $digit  = 0-9
-$alpha  = [a-zA-Z]
+$special = [\.\;\,\$\|\*\+\?\#\~\-\{\}\(\)\[\]\^\/]
+$symbolic = $printable # [$special$white]
 $quotable = $printable # \'
 
 tokens :-
@@ -47,7 +48,7 @@ tokens :-
   "limit"                     { \s -> Limit }
   "order by"                  { \s -> OrderBy}
   \*                          { \s -> Asterisk }
-  $alpha [$alpha $digit \_]*  { \s -> Symb s }
+  $symbolic+                  { \s -> Symb s }
 
 {
 -- Each action has type :: String -> Token
