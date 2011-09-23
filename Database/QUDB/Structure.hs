@@ -21,10 +21,13 @@ data Meta = Meta deriving (Show, Eq)
 data Table = Table String [Column] [Row] deriving (Read, Show, Eq)
 
 instance NFData (Table) where
-  rnf (Table _ _ rows) = map rnf rows `deepseq` ()
+  rnf (Table _ cols rows) = map rnf cols `deepseq` map rnf rows `deepseq` ()
 
 -- |A table's column which has a name and a type.
 data Column = Column String Type deriving (Read, Show, Eq)
+
+instance NFData (Column) where
+  rnf (Column n t) = n `seq` t `seq` ()
 
 -- |Row consists of a list of values.
 data Row = Row [Value] deriving (Read, Show, Eq)
@@ -34,7 +37,7 @@ instance NFData (Row) where
 
 -- |query is function responsible for executing Query tokens.
 query :: DB -> [Query] -> Maybe (DB, [[Value]])
-query db (CreateTable name rows : _) = Just (createTable db name rows, [])
+query db (CreateTable name rows : _) = Just $!! (createTable db name rows, [])
 query db (DropTable name : _) = fmap (const (db, [])) $ dropTable db name
 
 query db@(DB _ tables) (SelectAll tableName : stmts) =
