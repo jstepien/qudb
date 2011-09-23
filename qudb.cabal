@@ -17,6 +17,7 @@ Synopsis:            Quite Useless DB
 
 -- URL for the project homepage or repository.
 Homepage:            https://github.com/jstepien/qudb
+Bug-reports:         https://github.com/jstepien/qudb/issues
 
 -- The license under which the package is released.
 License:             LGPL-3
@@ -29,7 +30,7 @@ Author:              Piotr Monarski, Jan Stępień
 
 -- An email address to which users can send suggestions, bug reports,
 -- and patches.
-Maintainer:          https://github.com/jstepien/qudb/issues
+Maintainer:          Jan Stępień
 
 -- A copyright notice.
 -- Copyright:
@@ -40,7 +41,10 @@ Build-type:          Simple
 
 -- Extra files to be distributed with the package, such as examples or
 -- a README.
--- Extra-source-files:
+Extra-source-files:
+  README.mkd
+  test/*.sql
+  test/Test.lhs
 
 -- Constraint on the version of Cabal needed to build this package.
 Cabal-version:       >= 1.8
