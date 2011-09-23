@@ -9,13 +9,16 @@ import Codec.Compression.Snappy (compress, decompress)
 import Control.DeepSeq
 
 -- |A database has some metadata and tables.
-data DB = DB Meta [Table] deriving (Show, Eq)
+data DB = DB Meta [Table] deriving (Show, Read, Eq)
 
 instance NFData (DB) where
   rnf (DB _ tables) = map rnf tables `deepseq` ()
 
--- |Table's metadata is empty.
-data Meta = Meta deriving (Show, Eq)
+-- |Database's metadata consists of the format's version identifier.
+data Meta = Meta Version deriving (Show, Read, Eq)
+
+-- |Version identifier is a (major, minor) pair.
+data Version = Version Int Int deriving (Show, Read, Eq)
 
 -- |A table has a name, a list of columns' types and rows.
 data Table = Table String [Column] [Row] deriving (Read, Show, Eq)
@@ -157,14 +160,17 @@ constrain ((Table name cols acc), (Table _ _ rej)) (Limit num) =
   ((Table name cols acc'), (Table name cols (rej' ++ rej)))
   where (acc', rej') = splitAt num acc
 
+-- |The current DB format's version identifier.
+version :: Version
+version = Version 0 0
+
 -- |Creates a new DB instance.
 new :: DB
-new = DB Meta []
+new = DB (Meta version) []
 
 -- |Loads an existing DB from a serialised form.
 load :: C.ByteString -> DB
-load bytestring = DB Meta tables
-  where tables = (read . C.unpack . decompress) bytestring
+load = read . C.unpack . decompress
 
 -- |Adds a table to a given database.
 createTable :: DB
@@ -201,9 +207,10 @@ modifyTable db@(DB meta tables) name fun =
           | thisName == name = fun t : ts
           | otherwise        = t : modTable ts
 
----- |Dumps the database on the HDD.
+-- |Dumps the database to a bytestring, which can be later loaded using the
+-- load function.
 dump :: DB -> C.ByteString
-dump (DB _ tables) = compress $ C.pack $ show tables
+dump = compress . C.pack . show
 
 ---- |Inserts a new row to a given table. It should check all types and constraints.
 insertRow :: DB -> String -> [Value] -> Maybe DB
