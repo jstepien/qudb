@@ -1,4 +1,4 @@
-module Database.QUDB (S.initDB, S.loadDB, S.dumpDB, query, S.DB,
+module Database.QUDB (S.new, S.load, S.dump, query, S.DB,
     Value(IntValue, StringValue)) where
 
 import qualified Database.QUDB.Structure as S

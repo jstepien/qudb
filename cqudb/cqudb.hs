@@ -1,4 +1,4 @@
-import Database.QUDB
+import qualified Database.QUDB as QUDB
 import System.Environment
 import System.Directory
 import System.IO
@@ -20,13 +20,13 @@ main = do
                then repl db
                else noninteractive db
       when (isJust filename && db /= db') $
-        let (Just name) = filename in C.writeFile name $ dumpDB db'
+        let (Just name) = filename in C.writeFile name $ QUDB.dump db'
 
 usage = do
   name <- getProgName
   putStrLn $ "Usage: " ++ name ++ " [filename]"
 
-prepareDB Nothing = return initDB
+prepareDB Nothing = return QUDB.new
 prepareDB (Just file) = do
   gotFile <- doesFileExist file
   if gotFile
@@ -34,8 +34,8 @@ prepareDB (Just file) = do
       handle <- openFile file ReadMode
       dump <- C.hGetContents handle
       hClose handle
-      return $ loadDB dump
-    else return $ initDB
+      return $ QUDB.load dump
+    else return QUDB.new
 
 repl db = do
   putStr "> "
@@ -47,12 +47,12 @@ repl db = do
       line <- getLine
       db' <- if null line
                then return db
-               else (case query db line of
+               else (case QUDB.query db line of
                             Just (db', res) -> printResults res >> return db'
                             Nothing -> return db
                     ) `E.catch` handler db
       repl db'
-  where handler :: DB -> E.SomeException -> IO DB
+  where handler :: QUDB.DB -> E.SomeException -> IO QUDB.DB
         handler db e = print e >> return db
 
 noninteractive db = do
@@ -63,7 +63,7 @@ noninteractive db = do
       line <- getLine
       db' <- if null line
                then return db
-               else case query db line of
+               else case QUDB.query db line of
                  Just (db', res) -> printResults res >> return db'
                  Nothing -> return db
       noninteractive db'
@@ -72,5 +72,5 @@ printResults xs = mapM_ putStrLn . map columnify $ xs
   where columnify [] = ""
         columnify [x] = showValue x
         columnify (x:xs) = showValue x ++ "|" ++ columnify xs
-        showValue (IntValue x) = show x
-        showValue (StringValue x) = x
+        showValue (QUDB.IntValue x) = show x
+        showValue (QUDB.StringValue x) = x

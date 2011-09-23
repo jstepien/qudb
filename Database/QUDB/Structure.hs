@@ -1,4 +1,4 @@
-module Database.QUDB.Structure (initDB, loadDB, dumpDB, query, DB) where
+module Database.QUDB.Structure (new, load, dump, query, DB) where
 
 import Database.QUDB.EntityTypes
 import Database.QUDB.Query
@@ -158,12 +158,12 @@ constrain ((Table name cols acc), (Table _ _ rej)) (Limit num) =
   where (acc', rej') = splitAt num acc
 
 -- |Creates a new DB instance.
-initDB :: DB
-initDB = DB Meta []
+new :: DB
+new = DB Meta []
 
 -- |Loads an existing DB from a serialised form.
-loadDB :: C.ByteString -> DB
-loadDB bytestring = DB Meta tables
+load :: C.ByteString -> DB
+load bytestring = DB Meta tables
   where tables = (read . C.unpack . decompress) bytestring
 
 -- |Adds a table to a given database.
@@ -202,8 +202,8 @@ modifyTable db@(DB meta tables) name fun =
           | otherwise        = t : modTable ts
 
 ---- |Dumps the database on the HDD.
-dumpDB :: DB -> C.ByteString
-dumpDB (DB _ tables) = compress $ C.pack $ show tables
+dump :: DB -> C.ByteString
+dump (DB _ tables) = compress $ C.pack $ show tables
 
 ---- |Inserts a new row to a given table. It should check all types and constraints.
 insertRow :: DB -> String -> [Value] -> Maybe DB
