@@ -1,7 +1,10 @@
 Name:                qudb
 Version:             0.0.0
 Synopsis:            Quite Useless DB
--- Description:
+Description:
+  QUDB is a simple relational database meant to be a Haskell equivalent of
+  the SQLite executable. It currently supports a minimal subset of SQL. See the
+  `test` directory for examples of accepted queries.
 Homepage:            https://github.com/jstepien/qudb
 Bug-reports:         https://github.com/jstepien/qudb/issues
 License:             LGPL-3
