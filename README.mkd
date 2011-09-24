@@ -1,6 +1,7 @@
 qudb
 ====
 
-qudb is a Quite Useless DB. You really shouldn't use it.
+qudb is a Quite Useless DB. You really shouldn't use it yet. Learn a bit more on
+[Hackage](http://hackage.haskell.org/package/qudb).
 
-Run test using `test/Test.lhs`.
+Run tests using `test/Test.lhs`.
