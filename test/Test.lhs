@@ -30,7 +30,7 @@ runTests = do files <- testFiles
 runTest fn = run `E.catch` handle
   where run = do code <- readFile fn
                  expectation <- sqlite3 code
-                 result <- cqudb code
+                 result <- qudb code
                  if expectation == result
                    then putStr "." >> return OK
                    else diff expectation result >>= fail
@@ -39,7 +39,7 @@ runTest fn = run `E.catch` handle
         fail msg = putStr "F" >> return (Failure msg)
 
 diff expectation result = do f1 <- writeToFile expectation "sqlite3.txt"
-                             f2 <- writeToFile result "cqudb.txt"
+                             f2 <- writeToFile result "qudb.txt"
                              diffOutput <- runDiff f1 f2
                              removeFile f1
                              removeFile f2
@@ -54,9 +54,9 @@ diff expectation result = do f1 <- writeToFile expectation "sqlite3.txt"
 
 sqlite3 = readProcess "sqlite3" []
 
-cqudbPath = "../dist/build/cqudb/cqudb"
+qudbPath = "../dist/build/qudb/qudb"
 
-cqudb = readProcess cqudbPath []
+qudb = readProcess qudbPath []
 
 printResults results = do printSummary
                           mapM_ printDetails failures

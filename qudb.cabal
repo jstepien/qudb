@@ -16,8 +16,8 @@ Extra-source-files:
   test/Test.lhs
 Cabal-version:       >= 1.8
 
-Executable cqudb
-  Main-is: cqudb/cqudb.hs
+Executable qudb
+  Main-is: qudb/qudb.hs
   Build-depends: base >= 3 && < 5, array, bytestring, snappy, deepseq, directory
   Other-modules: Database.QUDB,
                  Database.QUDB.Scanner,
