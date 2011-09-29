@@ -3,5 +3,9 @@ qudb
 
 qudb is a Quite Useless DB. You really shouldn't use it yet. Learn a bit more on
 [Hackage](http://hackage.haskell.org/package/qudb).
+You can also take a look at the occasionally refreshed
+[documentation of qudb's internals](http://jstepien.github.com/qudb/).
 
 Run tests using `test/Test.lhs`.
+
+As this is my first project in Haskell I'd be really grateful for any comments.
