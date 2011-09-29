@@ -7,6 +7,7 @@ import Control.Monad (when)
 import qualified Control.Exception as E
 import qualified Data.ByteString.Char8 as C (hGetContents, writeFile)
 
+main :: IO ()
 main = do
   args <- getArgs
   if length args > 1
@@ -21,10 +22,12 @@ main = do
       when (isJust filename && db /= db') $
         let (Just name) = filename in C.writeFile name $ QUDB.dump db'
 
+usage :: IO ()
 usage = do
   name <- getProgName
   putStrLn $ "Usage: " ++ name ++ " [filename]"
 
+prepareDB :: Maybe FilePath -> IO QUDB.DB
 prepareDB Nothing = return QUDB.new
 prepareDB (Just file) = do
   gotFile <- doesFileExist file
@@ -36,6 +39,7 @@ prepareDB (Just file) = do
       return $ QUDB.load dump
     else return QUDB.new
 
+repl :: QUDB.DB -> IO QUDB.DB
 repl db = do
   putStr "> "
   hFlush stdout
@@ -54,6 +58,7 @@ repl db = do
   where handler :: QUDB.DB -> E.SomeException -> IO QUDB.DB
         handler db e = print e >> return db
 
+noninteractive :: QUDB.DB -> IO QUDB.DB
 noninteractive db = do
   eof <- isEOF
   if eof
@@ -67,6 +72,7 @@ noninteractive db = do
                  Left msg -> putStrLn msg >> return db
       noninteractive db'
 
+printResults :: [[QUDB.Value]] -> IO ()
 printResults xs = mapM_ putStrLn . map columnify $ xs
   where columnify [] = ""
         columnify [x] = showValue x
