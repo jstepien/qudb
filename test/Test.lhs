@@ -14,18 +14,19 @@ data Result = OK | Failure String deriving (Show)
 main = do dir <- getCurrentDirectory
           inPlace <- doesFileExist $ dir ++ "/Test.lhs"
           if inPlace
-            then runTests >>= printResults
+            then runSQLTests >>= printResults >> runQCTests
             else do setCurrentDirectory $ dir ++ "/test"
                     main
 
-testFiles :: IO [FilePath]
-testFiles = fmap (filter (".sql" `isSuffixOf`)) allFiles
-  where allFiles = getCurrentDirectory >>= getDirectoryContents
+filesEndingWith :: String -> IO [FilePath]
+filesEndingWith suffix = fmap (filter (suffix `isSuffixOf`)) allFiles
 
-runTests = do files <- testFiles
-              results <- mapM runTest files
-              putStrLn ""
-              return $ zip files results
+allFiles = getCurrentDirectory >>= getDirectoryContents
+
+runSQLTests = do files <- filesEndingWith ".sql"
+                 results <- mapM runTest files
+                 putStrLn ""
+                 return $ zip files results
 
 runTest fn = run `E.catch` handle
   where run = do code <- readFile fn
@@ -68,5 +69,12 @@ printResults results = do printSummary
         printDetails (test, (Failure err)) =
           putStrLn $ "\n" ++ indent (test : lines err) ++ "\n"
         indent lines = "  " ++ intercalate "\n  " lines
+
+runQCTests = do files <- filesEndingWith ".hs"
+                setCurrentDirectory ".."
+                mapM_ run files
+                setCurrentDirectory "test"
+  where run file = do output <- readProcess "runhaskell" ["test/" ++ file] ""
+                      putStr output
 
 \end{code}
