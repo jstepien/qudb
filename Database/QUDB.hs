@@ -7,7 +7,7 @@ import Database.QUDB.Parser (parse)
 
 query :: S.DB -> String -> Either String (S.DB, [[Value]])
 query db str = case parse str of
-                 Left error    -> Left error
-                 Right queries -> case S.query db queries of
-                                    Nothing  -> Left "Query failed."
-                                    Just res -> Right res
+                 Left msg -> Left msg
+                 Right q  -> case S.query db q of
+                               Left error    -> Left $ show error
+                               Right results -> Right results

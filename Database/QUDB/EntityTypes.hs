@@ -3,8 +3,6 @@ module Database.QUDB.EntityTypes (
   Value(IntValue, StringValue),
   ) where
 
-import Control.DeepSeq
-
 -- |Types of values which can be stored in columns.
 data Type = Int | String deriving (Read, Show, Eq)
 
@@ -12,5 +10,3 @@ data Type = Int | String deriving (Read, Show, Eq)
 data Value = IntValue Int
            | StringValue String
            deriving (Show, Read, Ord, Eq)
-
-instance NFData (Value)
