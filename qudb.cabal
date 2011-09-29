@@ -21,7 +21,7 @@ Cabal-version:       >= 1.8
 
 Executable qudb
   Main-is: qudb/qudb.hs
-  Build-depends: base >= 3 && < 5, array, bytestring, snappy, deepseq, directory
+  Build-depends: base >= 3 && < 5, array, bytestring, snappy, deepseq, directory, mtl
   Other-modules: Database.QUDB,
                  Database.QUDB.Scanner,
                  Database.QUDB.Parser,

@@ -2,7 +2,6 @@ import qualified Database.QUDB as QUDB
 import System.Environment
 import System.Directory
 import System.IO
-import System.IO.Error
 import Data.Maybe (isJust)
 import Control.Monad (when)
 import qualified Control.Exception as E
@@ -48,8 +47,8 @@ repl db = do
       db' <- if null line
                then return db
                else (case QUDB.query db line of
-                            Just (db', res) -> printResults res >> return db'
-                            Nothing -> return db
+                            Right (db', res) -> printResults res >> return db'
+                            Left msg -> putStrLn msg >> return db
                     ) `E.catch` handler db
       repl db'
   where handler :: QUDB.DB -> E.SomeException -> IO QUDB.DB
@@ -64,8 +63,8 @@ noninteractive db = do
       db' <- if null line
                then return db
                else case QUDB.query db line of
-                 Just (db', res) -> printResults res >> return db'
-                 Nothing -> return db
+                 Right (db', res) -> printResults res >> return db'
+                 Left msg -> putStrLn msg >> return db
       noninteractive db'
 
 printResults xs = mapM_ putStrLn . map columnify $ xs
