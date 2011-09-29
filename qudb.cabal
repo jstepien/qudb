@@ -17,6 +17,7 @@ Extra-source-files:
   README.mkd
   test/*.sql
   test/Test.lhs
+  test/Utils.hs
 Cabal-version:       >= 1.8
 
 Executable qudb
