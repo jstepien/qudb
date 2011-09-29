@@ -73,7 +73,7 @@ noninteractive db = do
       noninteractive db'
 
 printResults :: [[QUDB.Value]] -> IO ()
-printResults xs = mapM_ putStrLn . map columnify $ xs
+printResults = mapM_ (putStrLn . columnify)
   where columnify [] = ""
         columnify [x] = showValue x
         columnify (x:xs) = showValue x ++ "|" ++ columnify xs
