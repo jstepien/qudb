@@ -1,5 +1,5 @@
 Name:                qudb
-Version:             0.0.0
+Version:             0.0.1
 Synopsis:            Quite Useless DB
 Description:
   QUDB is a simple relational database meant to be a Haskell equivalent of
